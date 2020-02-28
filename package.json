@@ -12,11 +12,11 @@
     "url": "https://github.com/mate-h/tank-trouble/issues"
   },
   "dependencies": {
-    "express": "^4.15.2",
+    "express": "^4.17.1",
     "extend": "^3.0.2",
     "matter-js": "^0.12.0",
     "poly-decomp": "^0.2.1",
-    "socket.io": "^1.7.3"
+    "socket.io": "^2.3.0"
   },
   "main": "src/server.js",
   "devDependencies": {},
