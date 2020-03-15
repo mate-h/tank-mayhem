@@ -12,9 +12,9 @@ function Package() {
 
   this.selectPower = function() {
     // TODO: pick randomly with bias
-    // const powers = Object.entries(this.settings.powers);
-    // this.power = powers[Math.floor(Math.random() * powers.length)][1];
-    this.power = this.settings.powers.laser;
+    const powers = Object.entries(this.settings.powers);
+    this.power = powers[Math.floor(Math.random() * powers.length)][1];
+    // this.power = this.settings.powers.laser;
   };
   this.spawn = function() {
     this.selectPower();
