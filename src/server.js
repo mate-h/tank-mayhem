@@ -347,9 +347,8 @@ function Game() {
     return { x, y };
   };
 }
-var game = new Game();
-global.game = game;
-game.initialize();
+
+module.exports.Game = Game;
 
 var log = function(str) {
   if (process.stdout.clearLine !== undefined) process.stdout.clearLine();
