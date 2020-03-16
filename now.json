@@ -1,9 +1,9 @@
 {
   "routes": [
-    { "src": ".*", "dest": "/api" },
     {
-      "src": "/socket.io/socket.io",
+      "src": "/socket.io/socket.io.js",
       "dest": "./node_modules/socket.io-client/dist/socket.io.js"
-    }
+    },
+    { "src": ".*", "dest": "/api" }
   ]
 }
