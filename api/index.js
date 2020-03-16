@@ -1,7 +1,3 @@
-const { Game } = require("../src/server");
+const { app } = require("../src/server");
 
-module.exports = function start() {
-  var game = new Game();
-  global.game = game;
-  game.initialize();
-};
+module.exports = app;

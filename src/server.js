@@ -348,7 +348,12 @@ function Game() {
   };
 }
 
+var game = new Game();
+global.game = game;
+game.initialize();
+
 module.exports.Game = Game;
+module.exports.app = app;
 
 var log = function(str) {
   if (process.stdout.clearLine !== undefined) process.stdout.clearLine();
