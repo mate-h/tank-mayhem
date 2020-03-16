@@ -22,6 +22,7 @@
   "devDependencies": {},
   "scripts": {
     "start": "node src/server.js",
+    "build": "mkdir -p ./public/socket.io && cp ./node_modules/socket.io-client/dist/socket.io.js ./public/socket.io",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
