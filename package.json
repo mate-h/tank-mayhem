@@ -23,6 +23,7 @@
   "devDependencies": {},
   "scripts": {
     "start": "node src/server.js",
+    "build": "cp ./node_modules/socket.io-client/dist/socket.io.js ./public",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
