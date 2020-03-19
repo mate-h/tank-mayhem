@@ -9,7 +9,7 @@ nginx:
     - "3000:80"
 
 server-john:
-  build: ./server
+  build: ./
   links:
     - redis
   expose:
@@ -18,7 +18,7 @@ server-john:
     - NAME=John
 
 server-paul:
-  build: ./server
+  build: ./
   links:
     - redis
   expose:
@@ -27,7 +27,7 @@ server-paul:
     - NAME=Paul
 
 server-george:
-  build: ./server
+  build: ./
   links:
     - redis
   expose:
@@ -36,7 +36,7 @@ server-george:
     - NAME=George
 
 server-ringo:
-  build: ./server
+  build: ./
   links:
     - redis
   expose:
