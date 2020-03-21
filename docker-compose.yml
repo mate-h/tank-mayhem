@@ -2,9 +2,17 @@ version: "3"
 services:
   node:
     build: ./
+    links:
+      - redis
     ports:
+      - "9229:9229"
+    expose:
       - "3000"
       - "3001"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    tty: true
   nginx:
     image: nginx:alpine
     restart: unless-stopped
@@ -24,3 +32,7 @@ services:
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+  redis:
+    image: redis:alpine
+    expose:
+      - "6379"

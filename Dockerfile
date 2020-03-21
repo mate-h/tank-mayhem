@@ -1,18 +1,9 @@
 FROM node:alpine
 
-RUN apk add --update \
-    supervisor \
-  && rm -rf /var/cache/apk/*
+WORKDIR /app
+RUN npm i -g pm2
 
-ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY package.json package-lock.json ./
+RUN npm i
 
-RUN /bin/mkdir -p /srv/logs
-
-WORKDIR /srv
-
-RUN npm install --silent socket.io
-RUN npm dedupe
-
-EXPOSE 8080
-
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD pm2-runtime process.yml
