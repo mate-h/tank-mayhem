@@ -19,7 +19,7 @@ var handleConnect = function(socket) {
   player.socket = socket;
   game.players[socket.id] = player;
   player.spawn();
-  io.to(socket.id).emit("init", {
+  socket.emit("init", {
     player: {
       id: player.id,
       socket_id: socket.id,
