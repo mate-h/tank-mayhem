@@ -4,7 +4,7 @@ services:
     image: nginx:alpine
     restart: unless-stopped
     volumes:
-      - ./public:/usr/share/nginx/html
+      - ./public:/etc/nginx/html/
       - ./data/nginx:/etc/nginx/conf.d
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
