@@ -1,5 +1,5 @@
 apps:
-  - script: "src/server.js"
+  - script: "src/index.js"
     name: "instance1"
     env:
       NODE_ENV: development
@@ -8,7 +8,7 @@ apps:
     env_production:
       NODE_ENV: production
       NODE_PORT: 3000
-  - script: "src/server.js"
+  - script: "src/index.js"
     name: "instance2"
     env:
       NODE_ENV: development
