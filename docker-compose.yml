@@ -3,7 +3,8 @@ services:
   node:
     build: ./
     ports:
-      - "8080:8080"
+      - "3000"
+      - "3001"
   nginx:
     image: nginx:alpine
     restart: unless-stopped
