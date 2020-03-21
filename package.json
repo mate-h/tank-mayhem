@@ -16,14 +16,12 @@
     "extend": "^3.0.2",
     "matter-js": "^0.12.0",
     "poly-decomp": "^0.2.1",
-    "socket.io": "^2.3.0",
-    "socket.io-client": "^2.3.0"
+    "socket.io": "^2.3.0"
   },
   "main": "src/server.js",
   "devDependencies": {},
   "scripts": {
     "start": "node src/server.js",
-    "build": "cp ./node_modules/socket.io-client/dist/socket.io.js ./public",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
