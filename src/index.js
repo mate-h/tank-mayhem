@@ -1,5 +1,4 @@
 //DEPENDENCIES
-var express = require("express");
 var io = require("./server").socketio;
 var Matter = require("matter-js");
 var extend = require("extend");
@@ -71,10 +70,6 @@ var handleConnect = function(socket) {
 
 io.on("connection", function(socket) {
   handleConnect(socket);
-});
-
-http.listen(process.env.PORT || 80, function() {
-  console.log("listening on *:" + (process.env.PORT || 80));
 });
 
 function Game() {
