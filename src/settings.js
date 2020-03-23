@@ -26,7 +26,8 @@ module.exports = {
     num0: 32
   },
   package: {
-    spawnRate: 2000, // ms
+    spawnRate: 12000, // ms
+    max: 12,
     minimumDistance: 5, // TODO: cells
     appearance: {
       color: dark ? "#000000" : "#ffffff",
@@ -46,6 +47,7 @@ module.exports = {
     },
     powers: {
       speed: {
+        enabled: true,
         name: "speed",
         bias: 1,
         timeout: 10000, // ms
@@ -53,6 +55,7 @@ module.exports = {
         turnMultiplier: 1.3
       },
       slow: {
+        enabled: false,
         name: "slow",
         bias: 1,
         timeout: 10000, // ms
@@ -60,6 +63,7 @@ module.exports = {
         turnMultiplier: 0.9
       },
       shield: {
+        enabled: true,
         name: "shield",
         bias: 1,
         timeout: 20000, // ms
@@ -81,6 +85,7 @@ module.exports = {
         }
       },
       laser: {
+        enabled: true,
         bias: 1,
         name: "laser",
         timeout: 8000, // ms
@@ -89,6 +94,7 @@ module.exports = {
         speed: 1 // px / ms
       },
       bouncy: {
+        enabled: true,
         name: "bouncy",
         bias: 1,
         limit: 3,
@@ -98,11 +104,13 @@ module.exports = {
         fillStyle: "#FF69B4" // hotpink
       },
       invisibility: {
+        enabled: false,
         name: "invisibility",
         bias: 1,
         timeout: 20000 // ms
       },
       teleport: {
+        enabled: false,
         name: "teleport",
         bias: 1,
         timeout: 100 // ms

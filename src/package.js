@@ -19,7 +19,8 @@ function Package() {
   this.spawn = function() {
     this.selectPower();
     var ms = game.settings.level.appearance.mazesize;
-    var maxPackages = ms * ms - Object.keys(game.players).length;
+    var absoluteMax = ms * ms - Object.keys(game.players).length;
+    var maxPackages = Math.min(this.settings.max, absoluteMax);
     if (Object.keys(game.packages).length >= maxPackages) {
       console.log("max packages reached");
       return;
