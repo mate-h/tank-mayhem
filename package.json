@@ -19,12 +19,12 @@
     "socket.io": "^2.3.0",
     "socket.io-redis": "^5.2.0"
   },
-  "main": "src/server.js",
+  "main": "src/index.js",
   "devDependencies": {
     "socket.io-client": "^2.3.0"
   },
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
