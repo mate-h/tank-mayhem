@@ -8,12 +8,3 @@ apps:
     env_production:
       NODE_ENV: production
       NODE_PORT: 3000
-  - script: "index.js"
-    name: "instance2"
-    env:
-      NODE_ENV: development
-      NODE_PORT: 3001
-      #NODE_DEBUG: redis
-    env_production:
-      NODE_ENV: production
-      NODE_PORT: 3001

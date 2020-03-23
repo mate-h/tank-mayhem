@@ -8,7 +8,6 @@ services:
       - "9229:9229"
     expose:
       - "3000"
-      - "3001"
     volumes:
       - ./src:/app
       - /app/node_modules
