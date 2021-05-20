@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "extend": "^3.0.2",
+    "fastify": "^3.15.1",
+    "fastify-static": "^4.2.1",
     "matter-js": "^0.12.0",
     "poly-decomp": "^0.2.1",
     "redis": "^3.0.2",

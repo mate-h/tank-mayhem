@@ -1,37 +1,36 @@
 version: "3"
 services:
   node:
-    build: ./
+    container_name: node
+    build: ./node
     links:
       - redis
     ports:
-      - "9229:9229"
-    expose:
-      - "3000"
-    volumes:
-      - ./src:/app
+      - "0.0.0.0:3000:3000"
+    volumes: 
       - /app/node_modules
     tty: true
-  nginx:
-    image: nginx:alpine
-    restart: unless-stopped
-    volumes:
-      - ./public:/etc/nginx/html/
-      - ./data/nginx:/etc/nginx/conf.d
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
-    ports:
-      - "80:80"
-      - "443:443"
-    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
-  certbot:
-    image: certbot/certbot
-    restart: unless-stopped
-    volumes:
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+  # nginx:
+  #   image: nginx:alpine
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./public:/etc/nginx/html/
+  #     - ./data/nginx.local:/etc/nginx/conf.d
+  #     - ./data/certbot/conf:/etc/letsencrypt
+  #     - ./data/certbot/www:/var/www/certbot
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
+  # certbot:
+  #   image: certbot/certbot
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./data/certbot/conf:/etc/letsencrypt
+  #     - ./data/certbot/www:/var/www/certbot
+  #   entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
   redis:
     image: redis:alpine
+    container_name: redis
     expose:
       - "6379"

@@ -1,5 +1,9 @@
 //DEPENDENCIES
-var io = require("./server").socketio;
+var server = require("./server");
+var io = server.socketio;
+global.window = {
+  decomp: require("poly-decomp")
+}
 var Matter = require("matter-js");
 var extend = require("extend");
 var settings = require("./settings");
@@ -7,10 +11,6 @@ var Package = require("./package");
 var Player = require("./player");
 var Level = require("./level");
 var { extractBodyProperties } = require("./util");
-
-global.window = {
-  decomp: require("poly-decomp")
-};
 
 var handleConnect = function(socket) {
   var player = new Player();

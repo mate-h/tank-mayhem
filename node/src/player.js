@@ -377,7 +377,7 @@ function Player() {
           ],
           Util.merge([app, phy])
         );
-        if (shard.area > threshold_l) {
+        if (shard && shard.area > threshold_l) {
           shards.push(shard);
         }
       }

@@ -1,5 +1,5 @@
 apps:
-  - script: "index.js"
+  - script: "src/index.js"
     name: "instance1"
     env:
       NODE_ENV: development
