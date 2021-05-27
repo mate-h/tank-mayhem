@@ -1,11 +1,12 @@
-import { Bodies, Body, Vector, Events, Composite, IEventCollision, Engine } from "matter-js";
-const SAT = require('matter-js').SAT;
+import { Bodies, Body, Vector, Events, Composite } from "matter-js";
 import game from './index';
+import Color from "./color";
+import Util from "./util";
 
-const Color = require("./color");
-const Util = require("./util");
+// matter-js typings do not export SAT
+const SAT = require('matter-js').SAT;
 
-var bid = 0;
+let bid = 0;
 type Player = any;
 class Bullet {
   type = "normal";
@@ -22,8 +23,8 @@ class Bullet {
 
     //set up keyboard controls
 
-    var app = this.settings.appearance;
-    var phy = this.settings.physics;
+    const app = this.settings.appearance;
+    const phy = this.settings.physics;
     let speed = this.settings.speed;
     let fillStyle = this.player.color.toString();
     let size = this.settings.appearance.size;
@@ -39,7 +40,7 @@ class Bullet {
       ...phy.collisionFilter,
       mask
     };
-    var parts = {
+    const parts = {
       parts: [
         Bodies.circle(position.x, position.y, size, {
           render: { fillStyle },
@@ -112,7 +113,7 @@ class Bullet {
     // Body.setVelocity(this.body.velocity);
   };
   collision(e: any) {
-    var id1 = e.with.label.split(" ")[1];
+    const id1 = e.with.label.split(" ")[1];
     if (collidedWith("Player")) {
       //This is the part when you FUCKING DIE
       this.impact(game.players[id1]);
@@ -122,7 +123,7 @@ class Bullet {
     } else if (e.new_collision) {
       // perform a bounce with infinite elasticity
       // R = V - 2*(V dot N)*N
-      var new_velocity = Vector.sub(
+      let new_velocity = Vector.sub(
         this.body.velocity,
         Vector.mult(
           Vector.normalise(e.pair.collision.normal),

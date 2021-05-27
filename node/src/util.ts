@@ -1,8 +1,8 @@
-var extend = require("extend");
+const extend = require("extend");
 const Util = {
-  extractBodyProperties: function(body) {
-    var vertices = [];
-    for (var j = 0; j < body.vertices.length; j++) {
+  extractBodyProperties: function(body: any) {
+    const vertices = [];
+    for (let j = 0; j < body.vertices.length; j++) {
       vertices.push({
         x: body.vertices[j].x,
         y: body.vertices[j].y,
@@ -10,10 +10,10 @@ const Util = {
         isInternal: body.vertices[j].isInternal
       });
     }
-    var parts = [];
-    for (j = 0; j < body.parts.length; j++) {
-      var vertices2 = [];
-      for (var k = 0; k < body.parts[j].vertices.length; k++) {
+    const parts = [];
+    for (let j = 0; j < body.parts.length; j++) {
+      const vertices2 = [];
+      for (let k = 0; k < body.parts[j].vertices.length; k++) {
         vertices2.push({
           x: body.parts[j].vertices[k].x,
           y: body.parts[j].vertices[k].y,
@@ -46,18 +46,18 @@ const Util = {
       // isStatic: body.isStatic
     };
   },
-  clip: function(val, min, max) {
+  clip: function(val: number, min: number, max: number) {
     val = Math.max(min, val);
     val = Math.min(max, val);
     return val;
   },
-  interpolate: function(start, end, fact) {
+  interpolate: function(start: number, end: number, fact: number) {
     fact = Util.clip(fact, 0, 1);
     return start + (end - start) * fact;
   },
-  merge: function(list) {
-    function ext(o1, o2) {
-      var result = {};
+  merge: function(list: any[]) {
+    function ext(o1: any, o2: any) {
+      const result = {};
       extend(result, o1, o2);
       return result;
     }
@@ -65,24 +65,24 @@ const Util = {
     if (list.length <= 0) return {};
     if (list.length == 1) return list[0];
     else {
-      var res = {};
-      for (var i = 0; i < list.length; i++) res = ext(res, list[i]);
+      let res = {};
+      for (let i = 0; i < list.length; i++) res = ext(res, list[i]);
       return res;
     }
   },
-  clone: function(obj) {
-    var result = {};
+  clone: function(obj: any) {
+    const result = {};
     extend(result, {}, obj);
     return result;
   },
-  getRandomInt: function(min, max) {
+  getRandomInt: function(min: number, max: number) {
     return Math.floor(Math.random() * (max - min)) + min;
   },
-  getRandom: function(min, max) {
+  getRandom: function(min: number, max: number) {
     return Math.random() * (max - min) + min;
   },
   getRandomColor: function() {
-    var colors = [
+    const colors = [
       "#F44336",
       "#E91E63",
       "#9C27B0",
@@ -102,9 +102,10 @@ const Util = {
       "#9E9E9E",
       "#607D8B"
     ];
-    var c = colors[Util.getRandomInt(0, colors.length)];
+    const c = colors[Util.getRandomInt(0, colors.length)];
     return c;
   }
 };
 
+export default Util;
 module.exports = Util;

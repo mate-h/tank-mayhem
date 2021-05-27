@@ -60,7 +60,7 @@ class Color {
         getHex(str.substring(4, 6).split("")[0]) * 16 +
         getHex(str.substring(4, 6).split("")[1]);
     } else if (str.indexOf("rgb") > -1) {
-      var hasA = false;
+      let hasA = false;
       if (!(str.indexOf("rgba") > -1)) str = str.split("rgb(")[1];
       else if (str.indexOf("rgba") > -1) {
         str = str.split("rgba(")[1];
@@ -93,7 +93,7 @@ class Color {
   darker(scalar: number) {
     scalar = Util.clip(scalar, 0, 1);
 
-    var c = new Color();
+    const c = new Color();
     c.r = this.r * scalar;
     c.g = this.g * scalar;
     c.b = this.b * scalar;
@@ -102,7 +102,7 @@ class Color {
   };
   interpolate(color: Color, fact: number) {
     fact = Util.clip(fact, 0, 1);
-    var c = new Color();
+    const c = new Color();
     c.r = Util.interpolate(this.r, color.r, fact);
     c.g = Util.interpolate(this.g, color.g, fact);
     c.b = Util.interpolate(this.b, color.b, fact);
