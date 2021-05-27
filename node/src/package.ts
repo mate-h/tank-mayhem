@@ -97,4 +97,3 @@ class Package {
 }
 
 export default Package;
-module.exports = Package;

@@ -13,18 +13,17 @@ import decomp from 'poly-decomp';
 import Util from "./util";
 import Level from "./level";
 import Package from "./package";
+import Player from "./player";
 
 // TODO: remove this global variable and use ES6 imports instead
 (global.window as any) = {
   decomp
 }
-const Player = require("./player");
 const extend = require("extend");
 
 const handleConnect = function(socket: Socket) {
-  const player = new Player();
+  const player = new Player(socket);
   player.id = game.id_cnt++;
-  player.socket_id = socket.id;
   player.socket = socket;
   game.players[socket.id] = player;
   player.spawn();
@@ -81,7 +80,6 @@ io.on("connection", function(socket: Socket) {
   handleConnect(socket);
 });
 
-type Player = any;
 type Slice = any;
 class Game {
   settings = settings;

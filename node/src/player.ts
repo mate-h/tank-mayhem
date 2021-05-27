@@ -1,4 +1,4 @@
-const {
+import {
   Bodies,
   Body,
   Vector,
@@ -6,31 +6,47 @@ const {
   Constraint,
   World,
   Query
-} = require("matter-js");
-const Color = require("./color");
-const Bullet = require("./bullet");
-const Util = require("./util");
-const { extractBodyProperties } = require("./util");
+} from "matter-js";
+import Color from "./color";
+import Bullet from "./bullet";
+import Util from "./util";
+import { game } from "./index";
+import { Socket } from "socket.io";
 
-function Player() {
-  const game = global.game;
+type Power = any;
+class Player {
+  id = -1;
+  color = new Color(Util.getRandomColor());
+  settings = game.settings.player;
+  bullet_count = 0;
+  bullets: Bullet[] = [];
+  streaks: any[] = [];
+  score = 0;
+  alive = false;
+  deaths = 0;
+  kills = 0;
+  name ="Player";
+  activePowers: Record<string,any> = {};
+  socket_id: string;
 
-  this.id = -1;
-  this.color = new Color(Util.getRandomColor());
-  this.settings = game.settings.player;
-  this.bullet_count = 0;
-  this.bullets = [];
-  this.streaks = [];
-  this.score = 0;
-  this.alive = false;
-  this.deaths = 0;
-  this.kills = 0;
-  this.activePowers = {};
+  // game.playersCount++;
 
-  game.playersCount++;
+  shoot_released = true;
+  body = Body.create({});
+  socket: Socket;
+  constructor(socket: Socket) {
+    Events.on(
+      game.engine,
+      "beforeUpdate",
+      () => {
+        this.update();
+      }
+    );
+    this.socket_id = socket.id;
+    this.socket = socket;
+  }
 
-  var shoot_released = true;
-  this.spawn = function(params) {
+  spawn(params?: number[]) {
     if (this.alive) return;
 
     // reset active powers at spawn
@@ -38,9 +54,9 @@ function Player() {
     this.alive = true;
     game.playersAlive++;
 
-    var x, y;
+    let x, y;
     if (params == undefined) {
-      var pos = game.getRandomPosition();
+      const pos = game.getRandomPosition();
       x = pos.x;
       y = pos.y;
     } else {
@@ -49,11 +65,11 @@ function Player() {
     }
 
     //set up keyboard controls
-    var app = this.settings.appearance;
-    var phy = this.settings.physics;
+    const app = this.settings.appearance as any;
+    const phy = this.settings.physics;
     app.render = {};
     app.render.fillStyle = this.color.toString();
-    var extra = {
+    const extra = {
       parts: [
         //main body
         Bodies.rectangle(x, y, app.baseWidth, app.baseHeight, {
@@ -83,21 +99,15 @@ function Player() {
     };
 
     this.body = Body.create(Util.merge([app, phy, extra]));
-    game.addBody(this.body);
+    game.addBody([this.body]);
 
     // temporary
     // setTimeout(() => this.power(game.settings.package.powers.laser), 100);
   };
 
-  Events.on(
-    game.engine,
-    "beforeUpdate",
-    function() {
-      this.update();
-    }.bind(this)
-  );
+  
 
-  this.handleInput = function(down, command) {
+  handleInput(down: boolean, command: number) {
     switch (command) {
       case 0:
         this.forwardControl = down;
@@ -119,7 +129,7 @@ function Player() {
         break;
     }
   };
-  this.handleTouch = function(angle, move) {
+  handleTouch(angle: number, move: boolean) {
     this.leftTurnControl = false;
     this.rightTurnControl = false;
 
@@ -127,18 +137,18 @@ function Player() {
 
     Body.setAngle(this.body, angle);
   };
-  this.forwardControl = false;
-  this.backwardControl = false;
-  this.leftTurnControl = false;
-  this.rightTurnControl = false;
+  forwardControl = false;
+  backwardControl = false;
+  leftTurnControl = false;
+  rightTurnControl = false;
 
-  this.shoot = function() {
+  shoot() {
     if (!this.alive) return;
 
     if (this.activePowers.laser) {
       game.io.sockets.emit("laser", {
         shotAt: new Date().getTime(),
-        body: extractBodyProperties(this.body)
+        body: Util.extractBodyProperties(this.body)
       });
       return;
     }
@@ -151,10 +161,10 @@ function Player() {
     }
     if (check) {
       this.bullet_count++;
-      var bullet = new Bullet();
+      const bullet = new Bullet();
       bullet.player = this;
       this.bullets.push(bullet);
-      var len =
+      const len =
         this.settings.appearance.baseHeight / 2 +
         this.settings.appearance.shooterLength / 2;
       bullet.spawn(
@@ -175,16 +185,16 @@ function Player() {
           -Math.sin(this.body.angle - Math.PI / 2) * this.settings.speed.forward
       });
       setTimeout(
-        function() {
+        () => {
           this.bullet_count--;
           game.removeBody(this.bullets[0].body);
           this.bullets.splice(0, 1);
-        }.bind(this),
+        },
         game.settings.bullet.disappear
       );
     }
   };
-  this.shootLaser = function(streak) {
+  shootLaser(streak: any) {
     // console.log(pathPoints);
     const speed = this.activePowers.laser.speed;
     const streakLength = this.activePowers.laser.streakLength;
@@ -194,33 +204,33 @@ function Player() {
       delete this.streaks[idx];
     }, streak.length * speed);
   };
-  this.updateLaser = function({
+  updateLaser({
     pathPoints,
     length,
     firedAt,
     speed,
     streakLength
-  }) {
+  }: any) {
     const players = Object.values(game.players);
     const playerBodies = players.map(p => p.body);
     let currentDistance = (new Date().getTime() - firedAt) * speed;
     // console.log(currentDistance);
     let accDistance = 0;
-    pathPoints.forEach((p, i) => {
+    pathPoints.forEach((p: any, i: number) => {
       const next = pathPoints[i + 1];
       if (next) {
         const delta = Vector.magnitude(Vector.sub(next, p));
         const prevDistance = accDistance;
         accDistance += delta;
         if (accDistance > currentDistance - streakLength) {
-          const calcCurrentProgress = offs =>
+          const calcCurrentProgress = (offs: number) =>
             (Math.min(
               Math.max(currentDistance + offs, prevDistance),
               accDistance
             ) -
               prevDistance) /
             delta;
-          const getPointAlongPath = t =>
+          const getPointAlongPath = (t: number) =>
             Vector.add(p, Vector.mult(Vector.sub(next, p), t));
 
           const A = getPointAlongPath(calcCurrentProgress(-streakLength / 2));
@@ -240,7 +250,7 @@ function Player() {
       }
     });
   };
-  this.update = function() {
+  update() {
     if (!this.alive) return;
 
     //check to update velocities
@@ -283,7 +293,7 @@ function Player() {
       });
     }
   };
-  this.remove = function() {
+  remove() {
     game.removeBody(this.body);
     Object.values(this.activePowers).forEach(p => clearTimeout(p.cancel));
     if (this.activePowers.shield) {
@@ -297,7 +307,7 @@ function Player() {
       });
     }
   };
-  this.die = function() {
+  die() {
     if (!this.alive) return;
     //TODO: particle effects
     // remove player and shield body
@@ -309,23 +319,23 @@ function Player() {
     this.deaths++;
 
     //shatter effect
-    var shards = [];
-    var shardCountTarget = 30;
-    var r =
+    const shards = [];
+    const shardCountTarget = 30;
+    const r =
       this.settings.appearance.baseWidth / this.settings.appearance.baseHeight;
-    var a = Math.sqrt(shardCountTarget * r);
-    var b = Math.sqrt(shardCountTarget / r);
+    let a = Math.sqrt(shardCountTarget * r);
+    let b = Math.sqrt(shardCountTarget / r);
     a = Math.floor(a);
     b = Math.floor(b);
-    var sw = this.settings.appearance.baseWidth / a;
-    var sh = this.settings.appearance.baseHeight / b;
-    var shardCount = a * b;
-    var spread = Math.min(sw, sh) / 1.5;
-    var points = [[]];
-    for (var y = 0; y < b + 1; y++) {
-      for (var x = 0; x < a + 1; x++) {
-        var pt = { x: x * sw, y: y * sh };
-        var rdir = {
+    const sw = this.settings.appearance.baseWidth / a;
+    const sh = this.settings.appearance.baseHeight / b;
+    const shardCount = a * b;
+    const spread = Math.min(sw, sh) / 1.5;
+    const points: any[][] = [[]];
+    for (let y = 0; y < b + 1; y++) {
+      for (let x = 0; x < a + 1; x++) {
+        const pt = { x: x * sw, y: y * sh };
+        const rdir = {
           x: spread * (Math.random() * 2 - 1),
           y: spread * (Math.random() * 2 - 1)
         };
@@ -339,23 +349,23 @@ function Player() {
         points[x][y] = pt;
       }
     }
-    var app = this.settings.appearance;
-    var phy = this.settings.physics.shards;
+    const app = this.settings.appearance as any;
+    const phy = this.settings.physics.shards;
     app.render = {};
 
-    var offs = {
+    const offs = {
       x: this.body.position.x - this.settings.appearance.baseWidth / 2,
       y: this.body.position.y - this.settings.appearance.baseHeight / 2
     };
-    var threshold_l =
+    const threshold_l =
       (0.5 *
         (this.settings.appearance.baseWidth *
           this.settings.appearance.baseHeight)) /
       shardCount;
-    //var threshold_u = 2 * (this.settings.appearance.baseWidth * this.settings.appearance.baseHeight) / shardCount;
-    for (y = 0; y < b; y++) {
-      for (x = 0; x < a; x++) {
-        var newpos = Vector.rotateAbout(
+    //const threshold_u = 2 * (this.settings.appearance.baseWidth * this.settings.appearance.baseHeight) / shardCount;
+    for (let y = 0; y < b; y++) {
+      for (let x = 0; x < a; x++) {
+        const newpos = Vector.rotateAbout(
           {
             x: offs.x + (x + 0.5) * sw,
             y: offs.y + (y + 0.5) * sh
@@ -366,7 +376,7 @@ function Player() {
         this.color.a = Util.getRandom(0.54, 1);
         app.render.fillStyle = this.color.toString();
         app.label = "Shard";
-        var shard = Bodies.fromVertices(
+        const shard = Bodies.fromVertices(
           newpos.x,
           newpos.y,
           [
@@ -383,9 +393,9 @@ function Player() {
       }
     }
     game.addBody(shards);
-    var explode = 0.00035;
-    for (var i = 0; i < shards.length; i++) {
-      var f = Vector.mult(
+    const explode = 0.00035;
+    for (let i = 0; i < shards.length; i++) {
+      const f = Vector.mult(
         Vector.normalise(Vector.sub(shards[i].position, this.body.position)),
         explode
       );
@@ -399,10 +409,10 @@ function Player() {
       game.requestNewSession();
     }
   };
-  this.kill = function(player) {
-    player.die();
+  kill(player?: Player) {
+    if (player) player.die();
   };
-  this.power = function(power) {
+  power(power: Power) {
     // sends downstream message
     const socketEmit = (broadcast = true) => {
       (broadcast ? game.io.sockets : this.socket).emit("power", {
@@ -417,7 +427,7 @@ function Player() {
             }
           ])
         ),
-        body: extractBodyProperties(this.body)
+        body: Util.extractBodyProperties(this.body)
       });
     };
 
@@ -469,7 +479,7 @@ function Player() {
         c.radius,
         options
       );
-      game.addBody(body);
+      game.addBody([body]);
       power.body = body;
       power.constraint = Constraint.create({
         bodyA: this.body,
@@ -496,4 +506,4 @@ function Player() {
   };
 }
 
-module.exports = Player;
+export default Player;

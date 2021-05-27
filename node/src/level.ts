@@ -317,4 +317,3 @@ class Level {
 }
 
 export default Level;
-module.exports = Level;
