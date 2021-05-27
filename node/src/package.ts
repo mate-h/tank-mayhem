@@ -9,7 +9,7 @@ class Package {
     .toString(36)
     .replace(/[^a-z]+/g, "")
     .substr(0, 5);
-  body?: Body;
+  body = Body.create({});
 
   selectPower() {
     // TODO: pick randomly with bias
@@ -19,9 +19,9 @@ class Package {
   };
   spawn() {
     this.selectPower();
-    var ms = game.settings.level.appearance.mazesize;
-    var absoluteMax = ms * ms - Object.keys(game.players).length;
-    var maxPackages = Math.min(this.settings.max, absoluteMax);
+    const ms = game.settings.level.appearance.mazesize;
+    const absoluteMax = ms * ms - Object.keys(game.players).length;
+    const maxPackages = Math.min(this.settings.max, absoluteMax);
     if (Object.keys(game.packages).length >= maxPackages) {
       console.log("max packages reached");
       return;
@@ -29,24 +29,24 @@ class Package {
     function isValidPosition(pos: {x:number,y:number}) {
       if (!pos) return false;
 
-      var cellPos = game.getCell(pos);
-      var cellOccupied = false;
+      const cellPos = game.getCell(pos);
+      let cellOccupied = false;
       Object.entries(game.players).forEach(([socket_id, player]) => {
-        var playerPos = player.body.position;
-        var playerCellPos = game.getCell(playerPos);
+        const playerPos = player.body.position;
+        const playerCellPos = game.getCell(playerPos);
         if (playerCellPos.x === cellPos.x && playerCellPos.y === cellPos.y) {
           cellOccupied = true;
         }
       });
       Object.entries(game.packages).forEach(([id, pkg]) => {
-        var packageCellPos = game.getCell(pkg.body.position);
+        const packageCellPos = game.getCell(pkg.body.position);
         if (packageCellPos.x === cellPos.x && packageCellPos.y === cellPos.y) {
           cellOccupied = true;
         }
       });
       return !cellOccupied;
     }
-    var pos: {x:number,y:number} = game.getRandomPosition(0);;
+    let pos: {x:number,y:number} = game.getRandomPosition(0);;
     while (!isValidPosition(pos)) {
       pos = game.getRandomPosition(0);
     }
@@ -91,7 +91,7 @@ class Package {
     // this.destroy();
   };
   destroy() {
-    if (this.body) game.removeBody(this.body);
+    game.removeBody(this.body);
     delete game.packages[this.id];
   };
 }

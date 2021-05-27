@@ -12,12 +12,12 @@ import { socketio as io } from "./server";
 import decomp from 'poly-decomp';
 import Util from "./util";
 import Level from "./level";
+import Package from "./package";
 
 // TODO: remove this global variable and use ES6 imports instead
 (global.window as any) = {
   decomp
 }
-const Package = require("./package");
 const Player = require("./player");
 const extend = require("extend");
 
@@ -83,7 +83,6 @@ io.on("connection", function(socket: Socket) {
 
 type Player = any;
 type Slice = any;
-type Package = any;
 class Game {
   settings = settings;
   players: Record<string, Player> = {};
@@ -230,7 +229,7 @@ class Game {
     this.cancelNewSession = undefined;
     World.clear(this.world, false);
     this.playersAlive = 0;
-    this.packages = [];
+    this.packages = {};
     new Level().generate();
 
     const sparseKeys = Object.keys(this.players);
