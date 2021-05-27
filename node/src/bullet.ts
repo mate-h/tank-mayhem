@@ -1,22 +1,24 @@
-const { Bodies, Body, Vector, Events, SAT, Composite } = require("matter-js");
+import { Bodies, Body, Vector, Events, Composite, IEventCollision, Engine } from "matter-js";
+const SAT = require('matter-js').SAT;
+import game from './index';
+
 const Color = require("./color");
 const Util = require("./util");
 
 var bid = 0;
+type Player = any;
+class Bullet {
+  type = "normal";
+  id = bid++;
+  body = Body.create({});
+  settings = game.settings.bullet;
+  color = new Color("#ff00ff");
 
-function Bullet() {
-  const game = global.game;
-
-  this.type = 0;
-  this.id = bid++;
-  this.body = {};
-  this.settings = game.settings.bullet;
-  this.color = new Color("#ff00ff");
-
-  var has_spawn = false;
-  this.spawn = function(position, angle) {
-    if (has_spawn) return;
-    has_spawn = true;
+  has_spawn = false;
+  player: Player;
+  spawn(position: {x:number,y:number}, angle: number) {
+    if (this.has_spawn) return;
+    this.has_spawn = true;
 
     //set up keyboard controls
 
@@ -34,6 +36,7 @@ function Bullet() {
       fillStyle = this.player.activePowers.bouncy.fillStyle;
     }
     phy.collisionFilter = {
+      ...phy.collisionFilter,
       mask
     };
     var parts = {
@@ -65,12 +68,12 @@ function Bullet() {
       });
     }
     if (collided) {
-      has_spawn = false;
+      this.has_spawn = false;
       this.player.die();
       return;
     }
 
-    game.addBody(this.body);
+    game.addBody([this.body]);
 
     // const bulletVelocity = { x: 0, y: 0 };
     // const playerVelocity = this.player.body.velocity;
@@ -92,23 +95,23 @@ function Bullet() {
     Events.on(
       game.engine,
       "beforeUpdate",
-      function() {
+      () => {
         this.update();
-      }.bind(this)
+      }
     );
 
     Events.on(
       this.body,
       "collision",
-      function(e) {
+      (e: any) => {
         this.collision(e);
-      }.bind(this)
+      }
     );
   };
-  this.update = function() {
+  update() {
     // Body.setVelocity(this.body.velocity);
   };
-  this.collision = function(e) {
+  collision(e: any) {
     var id1 = e.with.label.split(" ")[1];
     if (collidedWith("Player")) {
       //This is the part when you FUCKING DIE
@@ -139,15 +142,15 @@ function Bullet() {
       );
       Body.setVelocity(this.body, new_velocity);
     }
-    function collidedWith(label) {
+    function collidedWith(label: string) {
       return e.with.label.split(" ")[0] == label;
     }
   };
-  this.impact = function(player) {
+  impact(player: Player) {
     this.destroy();
     this.player.kill(player);
   };
-  this.destroy = function() {
+  destroy() {
     //TODO: particle effects
     game.removeBody(this.body);
     this.player.bullet_count--;

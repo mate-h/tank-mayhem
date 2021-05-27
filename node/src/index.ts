@@ -5,21 +5,20 @@ import {
   Composite,
   World,
   Body,
-  Runner,
-  Bodies
+  Runner
 } from "matter-js";
 import settings from "./settings";
+import { socketio as io } from "./server";
+import decomp from 'poly-decomp';
 
-//DEPENDENCIES
-const server = require("./server");
-const io = server.socketio;
+// TODO: remove this global variable and use ES6 imports instead
 (global.window as any) = {
-  decomp: require("poly-decomp")
+  decomp
 }
-const extend = require("extend");
 const Package = require("./package");
 const Player = require("./player");
 const Level = require("./level");
+const extend = require("extend");
 const { extractBodyProperties } = require("./util");
 
 const handleConnect = function(socket: Socket) {
