@@ -1,15 +1,15 @@
 FROM mhart/alpine-node:latest as base
 
 WORKDIR /usr/src/app
-COPY package*.json .
+COPY package*.json /
 RUN npm install
 ENV PATH /usr/node_modules/.bin:$PATH
-COPY . .
+COPY . /
 
 # Production target
 FROM base as production
 ENV NODE_ENV=production
-RUN npm ci
+RUN npm run build
 RUN npm i -g pm2
 CMD ["npm", "run", "start:prod"]
 

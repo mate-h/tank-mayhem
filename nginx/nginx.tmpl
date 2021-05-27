@@ -406,8 +406,6 @@ server {
 	}
 
 	location / {
-		auth_request /auth;
-		
 		{{ if eq $proto "uwsgi" }}
 		include uwsgi_params;
 		uwsgi_pass {{ trim $proto }}://{{ trim $upstream_name }};
