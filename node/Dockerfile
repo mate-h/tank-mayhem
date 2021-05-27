@@ -8,11 +8,12 @@ COPY . .
 # Production target
 FROM base as production
 ENV NODE_ENV=production
+RUN npm ci
 RUN npm i -g pm2
-CMD pm2-runtime process.yml
+CMD ["npm", "run", "start:prod"]
 
 # Development target
 FROM base as development
 ENV NODE_ENV=development
-RUN npm install -g nodemon
-CMD ["nodemon", "./src/index.js"]
+RUN npm i -g nodemon
+CMD ["npm", "run", "dev"]

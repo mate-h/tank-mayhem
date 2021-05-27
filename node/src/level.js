@@ -46,7 +46,7 @@ function Level() {
           neighbors.push(potential[j]);
       if (neighbors.length) {
         n = n - 1;
-        next = neighbors[Math.floor(Math.random() * neighbors.length)];
+        const next = neighbors[Math.floor(Math.random() * neighbors.length)];
         unvisited[next[0] + 1][next[1] + 1] = false;
         if (next[0] == here[0])
           horiz[next[0]][(next[1] + here[1] - 1) / 2] = true;

@@ -1,19 +1,29 @@
+import type { Socket } from "socket.io";
+import {
+  Engine,
+  Events,
+  Composite,
+  World,
+  Body,
+  Runner,
+  Bodies
+} from "matter-js";
+import settings from "./settings";
+
 //DEPENDENCIES
-var server = require("./server");
-var io = server.socketio;
-global.window = {
+const server = require("./server");
+const io = server.socketio;
+(global.window as any) = {
   decomp: require("poly-decomp")
 }
-var Matter = require("matter-js");
-var extend = require("extend");
-var settings = require("./settings");
-var Package = require("./package");
-var Player = require("./player");
-var Level = require("./level");
-var { extractBodyProperties } = require("./util");
+const extend = require("extend");
+const Package = require("./package");
+const Player = require("./player");
+const Level = require("./level");
+const { extractBodyProperties } = require("./util");
 
-var handleConnect = function(socket) {
-  var player = new Player();
+const handleConnect = function(socket: Socket) {
+  const player = new Player();
   player.id = game.id_cnt++;
   player.socket_id = socket.id;
   player.socket = socket;
@@ -39,7 +49,7 @@ var handleConnect = function(socket) {
 
   socket.on("disconnect", function() {
     log("user disconnected with ID " + game.players[socket.id].id);
-    var alive = game.players[socket.id].alive;
+    const alive = game.players[socket.id].alive;
     game.players[socket.id].remove();
     delete game.players[socket.id];
 
@@ -68,46 +78,41 @@ var handleConnect = function(socket) {
   });
 };
 
-io.on("connection", function(socket) {
+io.on("connection", function(socket: Socket) {
   handleConnect(socket);
 });
 
-function Game() {
-  //Matter.js module aliases
-  var Engine = Matter.Engine,
-    Events = Matter.Events,
-    Composite = Matter.Composite,
-    World = Matter.World,
-    Bodies = Matter.Bodies;
+type Player = any;
+type Slice = any;
+class Game {
+  settings = settings;
+  players: Record<string, Player> = {};
+  packages = {};
+  playersAlive = 0;
+  playersCount = 0;
+  dynamicBodies: Record<string, Body> = {};
+  io = io;
+  engine = Engine.create({...this.settings.engine, ...this.settings.world});
+  world = this.engine.world;
 
-  this.settings = settings;
-  this.players = {};
-  this.packages = {};
-  this.playersAlive = 0;
-  this.playersCount = 0;
-  this.dynamicBodies = {};
-  this.io = io;
-
-  this.id_cnt = 1;
-  this.initialize = function() {
-    //create an engine
-    this.engine = Engine.create(this.settings.engine);
-    this.engine.world = World.create(this.settings.world);
-    this.world = this.engine.world;
-
+  id_cnt = 1;
+  initialize = () => {
     //set up level
     new Level().generate();
 
+    // create runner
+    const runner = Runner.create();
+
     //run the engine
-    Engine.run(this.engine);
+    Runner.run(runner, this.engine);
 
     //check for collisions
     Events.on(this.engine, "collisionStart", function(event) {
-      var i,
+      let i,
         pair,
         length = event.pairs.length;
 
-      var db = {};
+      const db: Record<string, unknown> = {};
       for (i = 0; i < length; i++) {
         pair = event.pairs[i];
         Events.trigger(pair.bodyA.parent, "collision", {
@@ -126,25 +131,25 @@ function Game() {
       }
     });
 
-    var old_fr = "";
+    let old_fr = "";
     Events.on(
       this.engine,
       "afterUpdate",
-      function() {
+      () => {
         //broadcast positions
-        var frame = this.getFrame();
-        var fr = JSON.stringify(frame);
+        const frame = this.getFrame();
+        const fr = JSON.stringify(frame);
         if (old_fr !== fr) {
           io.emit("frame", frame);
           old_fr = fr;
 
           if (process.stdout.clearLine !== undefined)
-            process.stdout.clearLine();
+            process.stdout.clearLine(0);
           if (process.stdout.cursorTo !== undefined) process.stdout.cursorTo(0);
 
           process.stdout.write(
             "frame:    slices " +
-              (Object.keys(this.dynamicBodies).length - discarded) +
+              (Object.keys(this.dynamicBodies).length - this.discarded) +
               "/" +
               Object.keys(this.dynamicBodies).length +
               "    length " +
@@ -152,41 +157,43 @@ function Game() {
               " "
           );
         }
-      }.bind(this)
+      }
     );
 
-    // var package = new Package();
+    // const package = new Package();
     // package.spawn();
-    var packageSpawnTimeout = setInterval(function() {
-      var package = new Package();
-      package.spawn();
+    const packageSpawnTimeout = setInterval(function() {
+      const pkg = new Package();
+      pkg.spawn();
     }, this.settings.package.spawnRate);
   };
 
-  this.sessionTimeout = this.settings.sessionTimeout; // ms
-  this.requestNewSession = function() {
+  sessionTimeout = this.settings.sessionTimeout; // ms
+  cancelNewSession?: () => void;
+  requestNewSession() {
     if (this.cancelNewSession) this.cancelNewSession();
     const timeout = setTimeout(() => {
       this.newSession();
     }, this.sessionTimeout);
-    this.cancelNewSession = function() {
+    this.cancelNewSession = () => {
       clearTimeout(timeout);
     };
   };
-  var old_frame = {};
-  var discarded = 0;
-  this.getFrame = function() {
-    var frame = {};
-    discarded = 0;
-    var sparseKeys = Object.keys(this.dynamicBodies);
-    for (var i = 0; i < sparseKeys.length; i++) {
-      var index = sparseKeys[i];
-      var body = this.dynamicBodies[index];
-      var res_pos = 100;
-      var res_ang = 1000;
-      // var res_vel = 100;
+  old_frame: { [key: string]: Record<string, unknown> } = {};
+  discarded = 0;
+  
+  getFrame() {
+    const frame: Record<string, Slice> = {};
+    this.discarded = 0;
+    const sparseKeys = Object.keys(this.dynamicBodies);
+    for (let i = 0; i < sparseKeys.length; i++) {
+      const index = sparseKeys[i];
+      const body = this.dynamicBodies[index];
+      const res_pos = 100;
+      const res_ang = 1000;
+      // const res_vel = 100;
 
-      var slice = [
+      const slice = [
         Math.round(body.position.x * res_pos) / res_pos,
         Math.round(body.position.y * res_pos) / res_pos,
         Math.round(body.angle * res_ang) / res_ang //,
@@ -194,41 +201,41 @@ function Game() {
         // Math.round(body.velocity.y * res_vel) / res_vel
       ];
       if (
-        old_frame[index] == undefined ||
-        slice[0] != old_frame[index][0] ||
-        slice[1] != old_frame[index][1] ||
-        slice[2] != old_frame[index][2] // ||
+        this.old_frame[index] == undefined ||
+        slice[0] != this.old_frame[index][0] ||
+        slice[1] != this.old_frame[index][1] ||
+        slice[2] != this.old_frame[index][2] // ||
         // slice[3] != old_frame[index][3] ||
         // slice[4] != old_frame[index][4]
       )
         frame[index] = slice;
-      else discarded++;
+      else this.discarded++;
     }
-    extend(old_frame, frame, {});
+    extend(this.old_frame, frame, {});
     return frame;
   };
 
-  this.getBodies = function() {
-    var bodies = Composite.allBodies(this.world);
-    var frame = [];
+  getBodies() {
+    const bodies = Composite.allBodies(this.world);
+    const frame = [];
 
-    for (var i = 0; i < bodies.length; i++) {
+    for (let i = 0; i < bodies.length; i++) {
       frame.push(extractBodyProperties(bodies[i]));
     }
 
     return frame;
   };
 
-  this.newSession = function() {
-    this.cancelNewSession = null;
-    World.clear(this.world);
+  newSession() {
+    this.cancelNewSession = undefined;
+    World.clear(this.world, false);
     this.playersAlive = 0;
     this.packages = [];
     new Level().generate();
 
-    var sparseKeys = Object.keys(this.players);
-    for (var i = 0; i < sparseKeys.length; i++) {
-      var player = this.players[sparseKeys[i]];
+    const sparseKeys = Object.keys(this.players);
+    for (let i = 0; i < sparseKeys.length; i++) {
+      const player = this.players[sparseKeys[i]];
       if (player === undefined) {
         delete this.players[sparseKeys[i]];
         continue;
@@ -257,17 +264,17 @@ function Game() {
     }
   };
 
-  this.addBody = function(bodies) {
+  addBody(bodies: Body[]) {
     if (!Array.isArray(bodies)) bodies = [bodies];
-    var emitBodies = [];
-    for (var i = 0; i < bodies.length; i++) {
+    const emitBodies = [];
+    for (let i = 0; i < bodies.length; i++) {
       emitBodies.push(extractBodyProperties(bodies[i]));
       this.dynamicBodies[bodies[i].id] = bodies[i];
     }
     io.emit("spawn", emitBodies);
     World.add(this.world, bodies);
   };
-  this.removeBody = function(body) {
+  removeBody(body: Body) {
     io.emit("remove", {
       id: body.id
     });
@@ -275,12 +282,12 @@ function Game() {
     World.remove(this.world, body);
   };
 
-  this.getRandomPosition = function(clip = 2) {
-    var x, y;
-    var r = Math.random();
-    var w = 1920;
-    var h = 1080;
-    var goffs = {
+  getRandomPosition(clip = 2) {
+    let x, y;
+    const r = Math.random();
+    const w = 1920;
+    const h = 1080;
+    const goffs = {
       x:
         w / 2 -
         (game.settings.level.appearance.cellsize *
@@ -312,11 +319,11 @@ function Game() {
     return { x, y };
   };
 
-  this.getCell = function(pos) {
-    var clip = 2;
-    var w = 1920;
-    var h = 1080;
-    var goffs = {
+  getCell(pos: {x: number, y: number}) {
+    const clip = 2;
+    const w = 1920;
+    const h = 1080;
+    const goffs = {
       x:
         w / 2 -
         (game.settings.level.appearance.cellsize *
@@ -328,21 +335,21 @@ function Game() {
           game.settings.level.appearance.mazesize) /
           2
     };
-    var cs = game.settings.level.appearance.cellsize;
-    var x = Math.abs(Math.round((pos.x - goffs.x) / cs - 0.5));
-    var y = Math.abs(Math.round((pos.y - goffs.y) / cs - 0.5));
+    const cs = game.settings.level.appearance.cellsize;
+    const x = Math.abs(Math.round((pos.x - goffs.x) / cs - 0.5));
+    const y = Math.abs(Math.round((pos.y - goffs.y) / cs - 0.5));
     return { x, y };
   };
 }
 
-var game = new Game();
-global.game = game;
+const game = new Game();
+(global as any).game = game;
 game.initialize();
 
-module.exports.Game = Game;
+export default game;
 
-var log = function(str) {
-  if (process.stdout.clearLine !== undefined) process.stdout.clearLine();
+const log = function(str: string) {
+  if (process.stdout.clearLine !== undefined) process.stdout.clearLine(0);
   if (process.stdout.cursorTo !== undefined) process.stdout.cursorTo(0);
 
   process.stdout.write(str + "\n");

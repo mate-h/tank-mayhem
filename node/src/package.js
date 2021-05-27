@@ -37,8 +37,8 @@ function Package() {
           cellOccupied = true;
         }
       });
-      Object.entries(game.packages).forEach(([id, package]) => {
-        var packageCellPos = game.getCell(package.body.position);
+      Object.entries(game.packages).forEach(([id, pkg]) => {
+        var packageCellPos = game.getCell(pkg.body.position);
         if (packageCellPos.x === cellPos.x && packageCellPos.y === cellPos.y) {
           cellOccupied = true;
         }

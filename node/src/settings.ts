@@ -8,7 +8,7 @@ const wallCategory = 16;
 const playerCategory = 32;
 const edgeCategory = 64;
 
-module.exports = {
+export default {
   theme: { dark },
   FPS: 60,
   sessionTimeout: 4000, // ms
@@ -178,7 +178,7 @@ module.exports = {
       color: dark ? "#212121" : "#ffffff",
       thickness: 6,
       cellsize: 62,
-      mazesize: 6, // 12 cells
+      mazesize: 12, // 12 cells
       shadow: true
     },
     physics: {
