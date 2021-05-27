@@ -1,5 +1,5 @@
 import { Bodies, Body, Vector, Events, Composite } from "matter-js";
-import game from './index';
+import {game} from './index';
 import Color from "./color";
 import Util from "./util";
 

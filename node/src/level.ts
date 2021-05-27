@@ -1,14 +1,14 @@
-const { World, Bodies } = require("matter-js");
+import { World, Bodies, Body } from "matter-js";
+import { game } from './index';
 
-function Level() {
-  const game = global.game;
+class Level {
 
-  this.walls = [];
-  this.settings = game.settings.level;
-  this.generate = function() {
+  walls: Body[] = [];
+  settings = game.settings.level;
+  generate() {
     //remove old stuff
     if (this.walls.length > 0) {
-      World.remove(game.world, this.walls);
+      World.remove(game.world, this.walls as any);
       this.walls = [];
     }
 
@@ -19,13 +19,13 @@ function Level() {
       alert("illegal maze dimensions");
       return;
     }
-    var horiz = [];
+    var horiz: any[][] = [];
     for (var j = 0; j < x + 1; j++) horiz[j] = [];
-    var verti = [];
+    var verti: any[][] = [];
     for (var j = 0; j < y + 1; j++) verti[j] = [];
     var here = [Math.floor(Math.random() * x), Math.floor(Math.random() * y)];
     var path = [here];
-    var unvisited = [];
+    var unvisited: any[][] = [];
     for (var j = 0; j < x + 2; j++) {
       unvisited[j] = [];
       for (var k = 0; k < y + 1; k++)
@@ -52,7 +52,10 @@ function Level() {
           horiz[next[0]][(next[1] + here[1] - 1) / 2] = true;
         else verti[(next[0] + here[0] - 1) / 2][next[1]] = true;
         path.push((here = next));
-      } else here = path.pop();
+      } else {
+        const n = path.pop();
+        if (n) here = n;
+      }
     }
 
     //lighten up this shit
@@ -77,11 +80,12 @@ function Level() {
           if (cnt > 2) {
             var done = false;
             var tried = [];
+            let which = 0;
             while (!done) {
-              var which = Math.floor(Math.random() * 4);
+              which = Math.floor(Math.random() * 4);
               if (tried.indexOf(which) == -1) tried.push(which);
               //Does the wall I'm trying to remove have more than 1 connection?
-              var bubble = countConnections(i, j, which) < 2;
+              const bubble = countConnections(i, j, which) < 2;
               //if the blocks surrounding me have a wall of 0 connections, continue searching
               var dont_remove = false;
               if (!places[which] && tried.length < 4) {
@@ -114,7 +118,7 @@ function Level() {
         }
       }
     }
-    function countConnections(x, y, wall_index) {
+    function countConnections(x: number, y: number, wall_index: number) {
       var j = y,
         i = x,
         which = wall_index;
@@ -164,8 +168,10 @@ function Level() {
           pl2.push(verti[j][i + 1 - 1]);
           return countThem(pl, pl2);
           break;
+        default:
+          return 0;
       }
-      function countThem(pl, pl2) {
+      function countThem(pl: any[], pl2: any[]) {
         //number of connections
         var conn = 0;
         var cnta = 0;
@@ -178,7 +184,7 @@ function Level() {
       }
     }
 
-    function removeWall(x, y, wall_index) {
+    function removeWall(x: number, y: number, wall_index: number) {
       var j = y,
         i = x,
         which = wall_index;
@@ -198,7 +204,7 @@ function Level() {
       }
     }
 
-    function placeWall(x, y, wall_index) {
+    function placeWall(x: number, y: number, wall_index: number) {
       var j = y,
         i = x,
         which = wall_index;
@@ -220,7 +226,7 @@ function Level() {
 
     this.spawn(x, y, horiz, verti);
   };
-  this.spawn = function(x, y, horiz, verti) {
+  spawn(x: number, y: number, horiz: any[][], verti: any[][]) {
     //spawn bodies
     var w = 1920;
     var h = 1080;
@@ -309,4 +315,5 @@ function Level() {
   };
 }
 
+export default Level;
 module.exports = Level;

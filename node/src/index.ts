@@ -10,6 +10,8 @@ import {
 import settings from "./settings";
 import { socketio as io } from "./server";
 import decomp from 'poly-decomp';
+import Util from "./util";
+import Level from "./level";
 
 // TODO: remove this global variable and use ES6 imports instead
 (global.window as any) = {
@@ -17,9 +19,7 @@ import decomp from 'poly-decomp';
 }
 const Package = require("./package");
 const Player = require("./player");
-const Level = require("./level");
 const extend = require("extend");
-const { extractBodyProperties } = require("./util");
 
 const handleConnect = function(socket: Socket) {
   const player = new Player();
@@ -219,7 +219,7 @@ class Game {
     const frame = [];
 
     for (let i = 0; i < bodies.length; i++) {
-      frame.push(extractBodyProperties(bodies[i]));
+      frame.push(Util.extractBodyProperties(bodies[i]));
     }
 
     return frame;
@@ -267,7 +267,7 @@ class Game {
     if (!Array.isArray(bodies)) bodies = [bodies];
     const emitBodies = [];
     for (let i = 0; i < bodies.length; i++) {
-      emitBodies.push(extractBodyProperties(bodies[i]));
+      emitBodies.push(Util.extractBodyProperties(bodies[i]));
       this.dynamicBodies[bodies[i].id] = bodies[i];
     }
     io.emit("spawn", emitBodies);
@@ -341,11 +341,9 @@ class Game {
   };
 }
 
-const game = new Game();
+export let game = new Game();
 (global as any).game = game;
 game.initialize();
-
-export default game;
 
 const log = function(str: string) {
   if (process.stdout.clearLine !== undefined) process.stdout.clearLine(0);
