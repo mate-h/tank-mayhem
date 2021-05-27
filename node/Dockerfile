@@ -3,6 +3,7 @@ FROM mhart/alpine-node:latest as base
 WORKDIR /usr/src/app
 COPY package*.json .
 RUN npm install
+ENV PATH /usr/node_modules/.bin:$PATH
 COPY . .
 
 # Production target
