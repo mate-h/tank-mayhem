@@ -83,10 +83,11 @@ io.on("connection", function(socket: Socket) {
 
 type Player = any;
 type Slice = any;
+type Package = any;
 class Game {
   settings = settings;
   players: Record<string, Player> = {};
-  packages = {};
+  packages: Record<string, Package> = {};
   playersAlive = 0;
   playersCount = 0;
   dynamicBodies: Record<string, Body> = {};
@@ -281,8 +282,8 @@ class Game {
     World.remove(this.world, body);
   };
 
-  getRandomPosition(clip = 2) {
-    let x, y;
+  getRandomPosition(clip = 2): {x:number,y:number} {
+    let x: number, y: number;
     const r = Math.random();
     const w = 1920;
     const h = 1080;

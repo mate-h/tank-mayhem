@@ -1,22 +1,23 @@
-const Matter = require("matter-js");
+import { Body, Bodies, Events } from "matter-js";
+import { game } from "./index";
 
-function Package() {
-  const game = global.game;
-  this.settings = game.settings.package;
-  this.used = false;
-
-  this.id = Math.random()
+class Package {
+  settings = game.settings.package;
+  used = false;
+  power: any;
+  id = Math.random()
     .toString(36)
     .replace(/[^a-z]+/g, "")
     .substr(0, 5);
+  body?: Body;
 
-  this.selectPower = function() {
+  selectPower() {
     // TODO: pick randomly with bias
     const powers = Object.entries(this.settings.powers);
     this.power = powers[Math.floor(Math.random() * powers.length)][1];
     // this.power = this.settings.powers.laser;
   };
-  this.spawn = function() {
+  spawn() {
     this.selectPower();
     var ms = game.settings.level.appearance.mazesize;
     var absoluteMax = ms * ms - Object.keys(game.players).length;
@@ -25,7 +26,7 @@ function Package() {
       console.log("max packages reached");
       return;
     }
-    function isValidPosition(pos) {
+    function isValidPosition(pos: {x:number,y:number}) {
       if (!pos) return false;
 
       var cellPos = game.getCell(pos);
@@ -45,11 +46,11 @@ function Package() {
       });
       return !cellOccupied;
     }
-    var pos;
+    var pos: {x:number,y:number} = game.getRandomPosition(0);;
     while (!isValidPosition(pos)) {
       pos = game.getRandomPosition(0);
     }
-    this.body = Matter.Bodies.rectangle(
+    this.body = Bodies.rectangle(
       pos.x,
       pos.y,
       this.settings.appearance.size,
@@ -60,22 +61,22 @@ function Package() {
         render: {
           fillStyle: this.settings.appearance.color
         }
-      }
+      } as any
     );
 
-    game.addBody(this.body);
+    game.addBody([this.body]);
 
-    Matter.Events.on(
+    Events.on(
       this.body,
       "collision",
-      function(e) {
+      (e: any) => {
         this.collision(e);
-      }.bind(this)
+      }
     );
 
     game.packages[this.id] = this;
   };
-  this.collision = function(e) {
+  collision(e: any) {
     // update player status
     const id1 = e.with.label.split(" ")[1];
     if (collidedWith("Player") && !this.used) {
@@ -84,15 +85,16 @@ function Package() {
       this.used = true;
       this.destroy();
     }
-    function collidedWith(label) {
+    function collidedWith(label: string) {
       return e.with.label.split(" ")[0] == label;
     }
     // this.destroy();
   };
-  this.destroy = function() {
-    game.removeBody(this.body);
+  destroy() {
+    if (this.body) game.removeBody(this.body);
     delete game.packages[this.id];
   };
 }
 
+export default Package;
 module.exports = Package;
