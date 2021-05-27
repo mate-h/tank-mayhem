@@ -178,7 +178,7 @@ module.exports = {
       color: dark ? "#212121" : "#ffffff",
       thickness: 6,
       cellsize: 62,
-      mazesize: 12, // 12 cells
+      mazesize: 6, // 12 cells
       shadow: true
     },
     physics: {

@@ -2,7 +2,7 @@
 
 A multiplayer web physics game inspired by Tank Trouble
 
-<img src="./tank-trouble.png" alt="Thumbnail" width="520" />
+<img src="./tank-mayhem.png" alt="Thumbnail" width="520" />
 
 *Note*: This is a work in progress as you can probably tell.
 
@@ -20,12 +20,10 @@ This project was heavily inspired by a game me and my buddies used to kill time 
 Install Docker CLI and run
 
 ```bash
-docker-compose up -d
+docker-compose --env-file ./config/.env.prod up -d
 ```
 
 For local development server
-```
-cd node
-npm i
-npm run start
+```bash
+docker-compose --env-file ./config/.env.dev up -d
 ```
