@@ -1,15 +1,19 @@
 const Util = require("./util");
 
-function Color(string) {
-  this.r = 0;
-  this.g = 0;
-  this.b = 0;
-  this.a = 1;
+class Color {
+  r = 0;
+  g = 0;
+  b = 0;
+  a = 1;
+  constructor(string?: string) {
+    if (string) this.parse(string);
+  }
+  
 
-  var parse = function(str) {
+  parse(str: string) {
     if (str.indexOf("#") > -1) {
       str = str.split("#")[1].toLowerCase();
-      function getHex(c) {
+      function getHex(c: any) {
         switch (c) {
           case "0":
             return 0;
@@ -44,8 +48,8 @@ function Color(string) {
           case "f":
             return 15;
         }
+        return -1;
       }
-
       this.r =
         getHex(str.substring(0, 2).split("")[0]) * 16 +
         getHex(str.substring(0, 2).split("")[1]);
@@ -57,7 +61,7 @@ function Color(string) {
         getHex(str.substring(4, 6).split("")[1]);
     } else if (str.indexOf("rgb") > -1) {
       var hasA = false;
-      if (!str.indexOf("rgba") > -1) str = str.split("rgb(")[1];
+      if (!(str.indexOf("rgba") > -1)) str = str.split("rgb(")[1];
       else if (str.indexOf("rgba") > -1) {
         str = str.split("rgba(")[1];
         hasA = true;
@@ -69,12 +73,10 @@ function Color(string) {
       this.g = Number.parseInt(str.split(",")[1]);
       this.b = Number.parseInt(str.split(",")[2]);
       if (hasA) this.a = Number.parseInt(str.split(",")[3]);
-    } else {
-      return null;
     }
-  }.bind(this);
+  }
 
-  this.toString = function() {
+  toString() {
     return (
       "rgba(" +
       Math.floor(this.r) +
@@ -88,7 +90,7 @@ function Color(string) {
     );
   };
 
-  this.darker = function(scalar) {
+  darker(scalar: number) {
     scalar = Util.clip(scalar, 0, 1);
 
     var c = new Color();
@@ -98,7 +100,7 @@ function Color(string) {
     c.a = this.a;
     return c;
   };
-  this.interpolate = function(color, fact) {
+  interpolate(color: Color, fact: number) {
     fact = Util.clip(fact, 0, 1);
     var c = new Color();
     c.r = Util.interpolate(this.r, color.r, fact);
@@ -107,8 +109,7 @@ function Color(string) {
     c.a = Util.interpolate(this.a, color.a, fact);
     return c;
   };
-
-  if (string) parse(string);
 }
 
+export default Color;
 module.exports = Color;
