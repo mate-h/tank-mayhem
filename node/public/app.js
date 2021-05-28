@@ -1,6 +1,10 @@
 const dark = false;
+import C2S from './lib/canvas2svg.js';
+import { writable } from './lib/store.js';
+export const playerPosition = writable({ x: 0, y: 0});
 
-(function Game() {
+export class Game {
+  constructor() {
   var isMobile = (function() {
     var check = false;
     (function(a) {
@@ -86,6 +90,9 @@ const dark = false;
     element: document.body,
     options: this.settings.render
   });
+  window.c2s = new C2S(1240, 1240);
+  window.context = this.render.context;
+  window.render = this.render;
   this.dynamicBodies = {};
   this.staticBodies = [];
   this.width = document.body.clientWidth;
@@ -147,7 +154,7 @@ const dark = false;
       name = "end";
     }
 
-    if (deltaTouch <= deltaThreshold) name = "shoot";
+    // if (deltaTouch >= deltaThreshold) name = "shoot";
 
     if (touch !== null) touchPrev = touch;
 
@@ -221,7 +228,7 @@ const dark = false;
     var dynamic_prev = [];
     socket.on(
       "frame",
-      function(obj) {
+      (obj) => {
         var sparseKeys = Object.keys(obj);
         for (var i = 0; i < sparseKeys.length; i++) {
           var index = sparseKeys[i];
@@ -256,13 +263,13 @@ const dark = false;
             };
           }
         }
-      }.bind(this)
+      }
     );
 
     setInterval(
-      function() {
+      () => {
         this.renderGame();
-      }.bind(this),
+      },
       1000 / this.settings.FPS
     );
 
@@ -338,6 +345,7 @@ const dark = false;
           // move the view
           Bounds.translate(game.render.bounds, translate);
 
+
           // we must update the mouse too
           Mouse.setOffset(mouse, game.render.bounds.min);
         }
@@ -354,31 +362,40 @@ const dark = false;
   };
 
   this.getBody = id => Object.values(this.dynamicBodies).find(b => b.id === id);
-  this.getAllBodies = function() {
+  this.getAllBodies = () => {
     return this.staticBodies.concat(Object.values(this.dynamicBodies));
   };
-  this.renderGame = function() {
+  this.renderGame = () => {
+    const cx = (game.render.bounds.max.x + game.render.bounds.min.x) / 2;
+    const cy = (game.render.bounds.max.y + game.render.bounds.min.y) / 2;
+    const w2 = window.innerWidth / 2;
+    const h2 = window.innerHeight / 2;
+    playerPosition.set({
+      x: PLAYER_ME.position.x - game.render.bounds.min.x - w2,
+      y: PLAYER_ME.position.y - game.render.bounds.min.y - h2,
+    });
+    
     var bodies = this.getAllBodies(),
-      context = render.context,
-      options = render.options;
+      context = this.render.context,
+      options = this.render.options;
 
     // clear the canvas with a transparent fill, to allow the canvas background to show
     context.fillStyle = game.settings.render.background;
-    context.fillRect(0, 0, render.canvas.width, render.canvas.height);
+    context.fillRect(0, 0, this.render.canvas.width, this.render.canvas.height);
 
     // handle bounds
     if (options.hasBounds) {
       // transform the view
-      Render.startViewTransform(render);
+      Render.startViewTransform(this.render);
 
       // update mouse
-      if (render.mouse) {
-        Mouse.setScale(render.mouse, {
-          x: (render.bounds.max.x - render.bounds.min.x) / render.canvas.width,
-          y: (render.bounds.max.y - render.bounds.min.y) / render.canvas.height
+      if (this.render.mouse) {
+        Mouse.setScale(this.render.mouse, {
+          x: (this.render.bounds.max.x - this.render.bounds.min.x) / this.render.canvas.width,
+          y: (this.render.bounds.max.y - this.render.bounds.min.y) / this.render.canvas.height
         });
 
-        Mouse.setOffset(render.mouse, render.bounds.min);
+        Mouse.setOffset(this.render.mouse, this.render.bounds.min);
       }
     }
 
@@ -389,17 +406,18 @@ const dark = false;
       );
     }
 
-    Render.bodies(render, bodies, context);
+    Render.bodies(this.render, bodies, context);
     this.renderLabels();
     if (options.hasBounds) {
       // revert view transforms
-      Render.endViewTransform(render);
+      Render.endViewTransform(this.render);
     }
 
     this.renderScore();
   };
+  window.renderGame = this.renderGame;
 
-  this.renderLabels = function() {
+  this.renderLabels = () => {
     const context = this.render.context;
     var dppx = window.devicePixelRatio;
     this.getAllBodies().forEach(body => {
@@ -464,7 +482,7 @@ const dark = false;
     });
   };
 
-  this.renderLaser = function() {
+  this.renderLaser = () => {
     const context = this.render.context;
     const playerBody = this.getBody(PLAYER_ME.body_id);
     if (!playerBody) return;
@@ -489,7 +507,7 @@ const dark = false;
       }
     });
   };
-  this.runLaser = function(body) {
+  this.runLaser = (body) => {
     const bodies = this.getAllBodies();
     const rayLength = Math.max(this.width, this.height);
 
@@ -552,7 +570,7 @@ const dark = false;
     return pathPoints;
   };
 
-  this.renderStreak = function(pathPoints, currentDistance) {
+  this.renderStreak = (pathPoints, currentDistance) => {
     const context = this.render.context;
     const streakLen = 200;
     let accDistance = 0;
@@ -589,7 +607,7 @@ const dark = false;
   };
 
   var animationFrame = null;
-  this.animate = function(cb, { duration = 250, end = () => {} }) {
+  this.animate = (cb, { duration = 250, end = () => {} }) => {
     const start = new Date().getTime();
     const step = () => {
       const curr = new Date().getTime();
@@ -615,7 +633,7 @@ const dark = false;
   var prevScore = null;
   var scoreOffset = 0;
   var animating = false;
-  this.renderScore = function() {
+  this.renderScore = () => {
     var dppx = window.devicePixelRatio;
     var context = this.render.context;
     context.scale(dppx, dppx);
@@ -679,7 +697,7 @@ const dark = false;
   };
 
   var socket = io();
-  var init = function(obj, retry) {
+  var init = (obj, retry) => {
     console.log("init");
     PLAYER_ME = obj.player;
     for (var i = 0; i < obj.level.length; i++) {
@@ -692,46 +710,46 @@ const dark = false;
     game.centerCamera(obj.player);
     if (!retry) game.initialize();
   };
-  socket.once("init", function(msg) {
+  socket.once("init", (msg) => {
     init(msg, false);
   });
   socket.on(
     "spawn",
-    function(obj) {
+    (obj) => {
       console.log("spawn");
       for (var i = 0; i < obj.length; i++) {
         this.dynamicBodies[obj[i].id] = obj[i];
       }
-    }.bind(this)
+    }
   );
   socket.on(
     "remove",
-    function(obj) {
+    (obj) => {
       console.log("remove", obj.id);
       delete this.dynamicBodies[obj.id];
-    }.bind(this)
+    }
   );
   socket.on(
     "disconnect",
-    function() {
+    () => {
       console.log("disconnect");
       this.dynamicBodies = {};
       this.staticBodies = [];
       socket.once("init", function(msg) {
         init(msg, true);
       });
-    }.bind(this)
+    }
   );
   socket.on(
     "new session",
-    function(msg) {
+    (msg) => {
       console.log("new session");
       this.dynamicBodies = {};
       this.staticBodies = [];
       // clear active powers
       PLAYER_ME.activePowers = {};
       init(msg, true);
-    }.bind(this)
+    }
   );
   // socket.on(
   //   "score",
@@ -828,7 +846,8 @@ const dark = false;
     };
   });
   var game = this;
-})();
+}
+}
 
 //
 //				code by Isaiah Smith

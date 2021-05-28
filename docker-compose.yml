@@ -1,6 +1,9 @@
 version: "3"
 services:
   node:
+    extends:
+      file: ./config/docker.${FILE_EXT}.yml
+      service: node
     container_name: node
     build: 
       context: ./node
@@ -9,8 +12,6 @@ services:
       - redis
     ports:
       - "127.0.0.1:3000:3000"
-    volumes: 
-      - ./node/src:/usr/src/app/src
     tty: true
     environment: 
       - VIRTUAL_HOST=${HOST}
