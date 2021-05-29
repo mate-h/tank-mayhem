@@ -1,5 +1,6 @@
 import { playerPosition } from '../app.js';
-import { name } from './joinmodal.js';
+import { name, open } from './joinmodal.js';
+
 function e(id) {
   return document.getElementById(id);
 }
@@ -14,14 +15,17 @@ function e(id) {
     })
     playerPosition.subscribe(p => {
       const dx = p.x;
-      const dy = p.y - 30;
-      e(`span${uid}`).style['transform'] = `translate(${dx}px, ${dy}px)`;
+      const dy = p.y - 35;
+      e(`button${uid}`).style['transform'] = `translate(${dx}px, ${dy}px)`;
     })
+    e(`button${uid}`).onclick = () => {
+      console.log('click');
+      open.update(v => !v);
+    }
   });
   return /*html*/`
   <style>
     #div${uid} {
-      pointer-events: none;
       position: fixed;
       display: flex;
       justify-content: center;
@@ -31,19 +35,22 @@ function e(id) {
       font-family: system-ui, sans-serif;
       font-size: 1rem;
       text-align: left;
+      pointer-events: none;
     }
-    #span${uid} {
-      display: inline-block;
-      background-color: rgba(224, 224, 224, 0.54);
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
-      border-radius: 3px;
+    #button${uid} {
+      pointer-events: all;
+      background-color: rgba(224, 224, 224, 0.76);
+      font-weight: 400;
       font-size: 0.75rem;
-      font-weight: 600;
-      padding: 0.25rem;
+    }
+    #button${uid}:active {
+      background-color: rgba(0,0,0,0.12);
     }
   </style>
   <div id="div${uid}">
-    <span id="span${uid}">${label}</span>
+    <button id="button${uid}">
+      <span id="span${uid}">${label}</span>
+    </button>
   </div>
   `;
 }

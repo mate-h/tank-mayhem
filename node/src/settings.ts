@@ -7,6 +7,7 @@ const bulletCategory = 8;
 const wallCategory = 16;
 const playerCategory = 32;
 const edgeCategory = 64;
+const playerPartCategory = 128;
 
 export default {
   theme: { dark },
@@ -42,7 +43,7 @@ export default {
       density: 0.000001,
       collisionFilter: {
         category: packageCategory,
-        mask: defaultCategory | playerCategory
+        mask: defaultCategory | playerCategory | playerPartCategory
       }
     },
     powers: {
@@ -143,7 +144,8 @@ export default {
       frictionStatic: 0,
       restitution: 0.3,
       collisionFilter: {
-        category: playerCategory
+        category: playerCategory,
+        mask: defaultCategory | shieldCategory | playerCategory | edgeCategory
       },
       shards: {
         density: 0.001,
@@ -169,7 +171,7 @@ export default {
       restitution: 1,
       collisionFilter: {
         category: bulletCategory,
-        mask: defaultCategory | shieldCategory | playerCategory | edgeCategory
+        mask: defaultCategory | shieldCategory | playerCategory | edgeCategory | playerPartCategory
       }
     }
   },
@@ -190,7 +192,7 @@ export default {
       isStatic: true,
       collisionFilter: {
         category: wallCategory,
-        mask: defaultCategory | playerCategory | bulletCategory
+        mask: defaultCategory | playerCategory | bulletCategory | playerPartCategory
       }
     }
   },
@@ -203,7 +205,7 @@ export default {
     gravity: { x: 0, y: 0 },
     collisionFilter: {
       category: edgeCategory,
-      mask: defaultCategory | playerCategory | bulletCategory
+      mask: defaultCategory | playerCategory | bulletCategory | playerPartCategory
     }
   }
 };

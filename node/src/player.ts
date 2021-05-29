@@ -34,6 +34,7 @@ class Player {
   shoot_released = true;
   body = Body.create({});
   socket: Socket;
+  bodyOptions: any;
   constructor(socket: Socket) {
     Events.on(
       game.engine,
@@ -137,6 +138,43 @@ class Player {
 
     Body.setAngle(this.body, angle);
   };
+  prevShootControl = false;
+  handleController(input: number[]) {
+    const left = {
+      x: input[0],
+      y: input[1],
+    }
+    const right = {
+      x: input[2],
+      y: input[3],
+    }
+    const angle = Math.atan2(right.y, right.x) + Math.PI/2;
+    const angleT = Math.atan2(left.y, left.x) + Math.PI/2;
+    const deg = (angle / Math.PI) * 180;
+    const len = Math.sqrt(right.x*right.x + right.y*right.y)
+    const len2 = Math.sqrt(left.x*left.x + left.y*left.y)
+    if (len2>0) {
+      // console.log(angleT);
+      // Body.setAngle(this.body.parts[1], angleT);
+      // Body.setAngle(this.body.parts[2], angleT);
+    }
+    console.log(input[4]);
+    const currentShootControl = input[4] === 1;
+    if (currentShootControl !== this.prevShootControl && currentShootControl === true) {
+      this.shoot();
+    }
+    this.prevShootControl = currentShootControl;
+    
+    if (len>0) {
+      Body.setAngle(this.body, angle);
+      this.forwardControl = true;
+      this.forwardVec = len;
+    } else {
+      this.forwardControl = false;
+      this.forwardVec = 1;
+    }
+  }
+  forwardVec = 1;
   forwardControl = false;
   backwardControl = false;
   leftTurnControl = false;
@@ -255,7 +293,7 @@ class Player {
 
     //check to update velocities
     let turn = this.settings.speed.turn;
-    let fw = this.settings.speed.forward;
+    let fw = this.settings.speed.forward * this.forwardVec;
     const ap = this.activePowers;
     // speed or slow based on which one was activated last
     let attr;

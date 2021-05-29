@@ -71,6 +71,10 @@ const handleConnect = function(socket: Socket) {
     game.players[socket.id].shoot();
   });
 
+  socket.on("controller-input", function(msg) {
+    game.players[socket.id].handleController(msg);
+  });
+
   socket.on("laserpath", function(msg) {
     game.players[socket.id].shootLaser(msg);
   });

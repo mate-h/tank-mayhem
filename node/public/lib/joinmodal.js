@@ -30,8 +30,9 @@ const colors = {
 
 const placeholder = animals[r(animals.length)];
 const defaultColor = Object.keys(colors)[r(Object.keys(colors).length)];
-export let name = writable(placeholder);
-export let color = writable(defaultColor);
+export const name = writable(placeholder);
+export const color = writable(defaultColor);
+export const open = writable(true);
 
 function e(id) {
   return document.getElementById(id);
@@ -50,12 +51,14 @@ export function render() {
   requestAnimationFrame(() => {
     playerPosition.subscribe(p => {
       const dx = p.x;
-      const dy = p.y + e('div2').clientHeight/2 + 40;
+      const dy = p.y - e('div2').clientHeight/2 - 55;
       e('div1').style['transform'] = `translate(${dx}px, ${dy}px)`;
-    })
+    });
+    open.subscribe(o => {
+      e('div1').style.visibility = o ? 'hidden' : 'visible';
+    });
     e('button-play').onclick = () => {
-      console.log('play');
-      e('div1').style.display = 'none';
+      open.set(false);
     }
     e('name').oninput = (e) => {
       const i = e.target.value;
@@ -82,13 +85,16 @@ export function render() {
         font-family: system-ui, sans-serif;
         font-size: 1rem;
         text-align: left;
+        pointer-events: none;
       }
       #div2 {
         display: inline-block;
-        background-color: white;
-        border-radius: 6px;
+        background-color: rgba(224, 224, 224, 0.76);
+        box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+        border-radius: 3px;
         padding: 1.5rem;
         box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+        pointer-events: all;
       }
       * {
         transition: box-shadow 150ms ease;
