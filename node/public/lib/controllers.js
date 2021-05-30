@@ -58,7 +58,8 @@ export function gamepad() {
         const r2 = Math.round(n2 / precision) * precision;
         return r1 === r2;
       }
-      const shoot = controller.buttons[6].pressed;
+      // console.log(controller.buttons.map(b =>b.pressed ? 1:0));
+      const shoot = controller.buttons[7].pressed;
       function then() {
         prev = { left, right, buttons: {shoot} };
       }

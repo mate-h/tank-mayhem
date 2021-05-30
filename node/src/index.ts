@@ -21,6 +21,22 @@ import Player from "./player";
 }
 const extend = require("extend");
 
+
+function serializePlayer(player: Player) {
+  return {
+    id: player.id,
+    socket_id: player.socket.id,
+    body_id: player.body.id,
+    color: player.color,
+    name: player.name,
+    position: {
+      x: player.body.position.x,
+      y: player.body.position.y
+    },
+    angle: player.body.angle,
+    score: 0
+  }
+}
 const handleConnect = function(socket: Socket) {
   const player = new Player(socket);
   player.id = game.id_cnt++;
@@ -28,19 +44,8 @@ const handleConnect = function(socket: Socket) {
   game.players[socket.id] = player;
   player.spawn();
   socket.emit("init", {
-    player: {
-      id: player.id,
-      socket_id: socket.id,
-      body_id: player.body.id,
-      color: player.color,
-      name: player.name,
-      position: {
-        x: player.body.position.x,
-        y: player.body.position.y
-      },
-      angle: player.body.angle,
-      score: 0
-    },
+    player: serializePlayer(player),
+    players: Object.values(game.players).map(p => serializePlayer(p)),
     level: game.getBodies()
   });
   log("user connected with ID " + player.id);
@@ -70,7 +75,9 @@ const handleConnect = function(socket: Socket) {
     game.players[socket.id].handleTouch(parseFloat(msg), false);
     game.players[socket.id].shoot();
   });
-
+  socket.on("player-data", function(msg) {
+    io.emit("player-data", msg);
+  });
   socket.on("controller-input", function(msg) {
     game.players[socket.id].handleController(msg);
   });

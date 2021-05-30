@@ -1,6 +1,6 @@
 import animals from './animals.js';
 import symbols from './symbols.js';
-import { writable } from './store.js';
+import { writable, streamable, playerData } from './store.js';
 import { playerPosition } from '../app.js';
 
 function r(c) {
@@ -28,11 +28,14 @@ const colors = {
   "blue grey": "#607D8B"
 }
 
-const placeholder = animals[r(animals.length)];
+let placeholder = "";
 const defaultColor = Object.keys(colors)[r(Object.keys(colors).length)];
-export const name = writable(placeholder);
-export const color = writable(defaultColor);
-export const open = writable(true);
+
+// playerData.compress = (v, s) => ([v.name, v.color, s.id]);
+// playerData.decompress = (v, s) => ([v.name, v.color, s.id]);
+export const name = writable("");
+export const color = writable("");
+export const open = writable(false);
 
 function e(id) {
   return document.getElementById(id);
@@ -54,9 +57,28 @@ export function render() {
       const dy = p.y - e('div2').clientHeight/2 - 55;
       e('div1').style['transform'] = `translate(${dx}px, ${dy}px)`;
     });
+    playerData.subscribe(p => {
+      if (p.name) {
+        placeholder = p.name;
+        e('name').placeholder = p.name;
+        name.set(p.name);
+      }
+      if (p.color) color.set(p.color);
+    })
     open.subscribe(o => {
-      e('div1').style.visibility = o ? 'hidden' : 'visible';
+      e('div1').style.visibility = o ? 'visible' : 'hidden';
     });
+    name.subscribe(n => {
+      console.log(n);
+      
+      // if (n === "") return;
+      // playerData.update(p => ({...p, name: n}))
+    })
+    color.subscribe(c => {
+      console.log(c);
+      // if (c === "") return;
+      // playerData.update(p => ({...p, color: c}))
+    })
     e('button-play').onclick = () => {
       open.set(false);
     }
@@ -66,7 +88,9 @@ export function render() {
       else name.set(i);
     }
     e('colors').onchange = (e) => {
-      console.log(e.target.value)
+      const val = e.target.value;
+      color.set(val);
+      // console.log(e.target.value)
     }
   })
   return /*html*/`
@@ -154,7 +178,7 @@ export function render() {
         <select style="margin-bottom: 1rem" name="color" id="colors">
           ${Object.entries(colors).map(([k,v]) => {
             if (colors[defaultColor] === v) return /*html*/`<option selected value="${v}">${k}</option>`;
-            return /*html*/`<option value="${v}">${k}</option>`
+            return /*html*/`<option value="${k}">${k}</option>`
           }).join('')}
         </select>
         <p style="text-align: right">

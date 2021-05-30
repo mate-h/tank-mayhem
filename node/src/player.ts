@@ -12,6 +12,11 @@ import Bullet from "./bullet";
 import Util from "./util";
 import { game } from "./index";
 import { Socket } from "socket.io";
+import animals from './lib/animals';
+
+function r(c: number) {
+  return Math.floor(Math.random() * c);
+}
 
 type Power = any;
 class Player {
@@ -25,7 +30,7 @@ class Player {
   alive = false;
   deaths = 0;
   kills = 0;
-  name ="Player";
+  name = animals[r(animals.length)];
   activePowers: Record<string,any> = {};
   socket_id: string;
 

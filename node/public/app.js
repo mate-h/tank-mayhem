@@ -1,10 +1,9 @@
 const dark = false;
-import C2S from './lib/canvas2svg.js';
-import { writable } from './lib/store.js';
+import { writable, socketClient, playerData } from './lib/store.js';
 export const playerPosition = writable({ x: 0, y: 0});
-
 export let player = null;
-export let socketClient = writable(null);
+import C2S from './lib/canvas2svg.js';
+import { playerList } from './lib/nametag.js';
 
 export class Game {
   constructor() {
@@ -705,6 +704,9 @@ export class Game {
     console.log("init");
     console.log(obj);
     player = obj.player;
+    const otherPlayers = obj.level.filter(l => l.label && l.label.includes('Player'));
+    playerList.set(obj.players);
+    playerData.set(player);
     for (var i = 0; i < obj.level.length; i++) {
       var body = obj.level[i];
       if (body.isStatic) game.staticBodies.push(body);
@@ -722,6 +724,10 @@ export class Game {
     "spawn",
     (obj) => {
       console.log("spawn");
+      // if (obj.label && obj.label.includes('Player')) {
+      //   playerList.update(l => [...l, obj]);
+      // }
+      
       for (var i = 0; i < obj.length; i++) {
         this.dynamicBodies[obj[i].id] = obj[i];
       }
@@ -731,6 +737,9 @@ export class Game {
     "remove",
     (obj) => {
       console.log("remove", obj.id);
+      // if (obj.label && obj.label.includes('Player')) {
+      //   playerList.update(l => l.filter(e => e.id !== obj.id));
+      // }
       delete this.dynamicBodies[obj.id];
     }
   );

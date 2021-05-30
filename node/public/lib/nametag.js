@@ -1,5 +1,8 @@
 import { playerPosition } from '../app.js';
 import { name, open } from './joinmodal.js';
+import { writable, playerData } from './store.js';
+
+export const playerList = writable([]);
 
 function e(id) {
   return document.getElementById(id);
@@ -10,6 +13,7 @@ function e(id) {
  export function render({label}) {
   const uid = Math.random().toString(36).substr(2, 7);
   requestAnimationFrame(() => {
+    
     name.subscribe(n => {
       e(`span${uid}`).innerText = n;
     })
@@ -19,7 +23,6 @@ function e(id) {
       e(`button${uid}`).style['transform'] = `translate(${dx}px, ${dy}px)`;
     })
     e(`button${uid}`).onclick = () => {
-      console.log('click');
       open.update(v => !v);
     }
   });
@@ -54,3 +57,10 @@ function e(id) {
   </div>
   `;
 }
+
+playerData.subscribe(d => {
+  console.log(d);
+})
+playerList.subscribe(l => {
+  console.log(l);
+});
