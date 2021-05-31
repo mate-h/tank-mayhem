@@ -372,9 +372,19 @@ export class Game {
     const cy = (game.render.bounds.max.y + game.render.bounds.min.y) / 2;
     const w2 = window.innerWidth / 2;
     const h2 = window.innerHeight / 2;
-    playerPosition.set({
-      x: player.position.x - game.render.bounds.min.x - w2,
-      y: player.position.y - game.render.bounds.min.y - h2,
+    function calcPos({x, y}) {
+      return {
+        x: x - game.render.bounds.min.x - w2,
+        y: y - game.render.bounds.min.y - h2,
+      }
+    }
+    playerPosition.set(calcPos(player.position));
+    playerList.update(list => {
+      return list.map(p => {
+        const body = this.getBody(p.body_id);
+        if (body) return {...p, position: calcPos(body.position) };
+        return p;
+      })
     });
     
     var bodies = this.getAllBodies(),
@@ -704,8 +714,7 @@ export class Game {
     console.log("init");
     console.log(obj);
     player = obj.player;
-    const otherPlayers = obj.level.filter(l => l.label && l.label.includes('Player'));
-    playerList.set(obj.players);
+    playerList.set(obj.players.filter(p => p.id !== player.id));
     playerData.set(player);
     for (var i = 0; i < obj.level.length; i++) {
       var body = obj.level[i];
@@ -720,14 +729,27 @@ export class Game {
   socket.once("init", (msg) => {
     init(msg, false);
   });
+
+  socket.on("join", obj => {
+    playerList.set(obj.filter(p => p.id !== player.id))
+  });
+  socket.on("player-data", obj => {
+    playerList.update(l => {
+      const rest = l.filter(i => i.id !== obj.id);
+      const found = l.find(i => i.id === obj.id);
+      if (found) {
+        return [...rest, obj];
+      }
+      return l;
+    })
+  });
+  socket.on("leave", obj => {
+    playerList.set(obj.filter(p => p.id !== player.id))
+  });
   socket.on(
     "spawn",
     (obj) => {
       console.log("spawn");
-      // if (obj.label && obj.label.includes('Player')) {
-      //   playerList.update(l => [...l, obj]);
-      // }
-      
       for (var i = 0; i < obj.length; i++) {
         this.dynamicBodies[obj[i].id] = obj[i];
       }
@@ -737,9 +759,6 @@ export class Game {
     "remove",
     (obj) => {
       console.log("remove", obj.id);
-      // if (obj.label && obj.label.includes('Player')) {
-      //   playerList.update(l => l.filter(e => e.id !== obj.id));
-      // }
       delete this.dynamicBodies[obj.id];
     }
   );

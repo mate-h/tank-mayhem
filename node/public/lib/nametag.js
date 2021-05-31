@@ -13,22 +13,40 @@ function e(id) {
  export function render({label}) {
   const uid = Math.random().toString(36).substr(2, 7);
   requestAnimationFrame(() => {
-    
     name.subscribe(n => {
       e(`span${uid}`).innerText = n;
-    })
+    });
+    let prevList = [];
+    playerList.subscribe(l => {
+      // if(prevList.sort().join(',') !== l.map(l => l.id).sort().join(',')) {
+        e(`div3${uid}`).innerHTML = l.map(p => /*html*/`
+        <div id="div2${uid}">
+          <span class="player${uid}" id="span2${uid}${p.id}">${p.name}</span>
+        </div>
+        `).join('');
+      // }
+      l.forEach(p => {
+        const dx = p.position.x;
+        const dy = p.position.y - 35;
+        e(`span2${uid}${p.id}`).style['transform'] = `translate(${dx}px, ${dy}px)`;
+      })
+      // update transform
+      
+
+      prevList = l.map(l => l.id);
+    });
     playerPosition.subscribe(p => {
       const dx = p.x;
       const dy = p.y - 35;
       e(`button${uid}`).style['transform'] = `translate(${dx}px, ${dy}px)`;
-    })
+    });
     e(`button${uid}`).onclick = () => {
       open.update(v => !v);
     }
   });
   return /*html*/`
   <style>
-    #div${uid} {
+    #div${uid}, #div2${uid}, #div3${uid} {
       position: fixed;
       display: flex;
       justify-content: center;
@@ -40,7 +58,14 @@ function e(id) {
       text-align: left;
       pointer-events: none;
     }
-    #button${uid} {
+    .player${uid} {
+      height: 1.5rem;
+      line-height: 1.5rem;
+      border-radius: 3px;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+      padding: 0 0.5rem;
+    }
+    .player${uid}, #button${uid} {
       pointer-events: all;
       background-color: rgba(224, 224, 224, 0.76);
       font-weight: 400;
@@ -54,6 +79,10 @@ function e(id) {
     <button id="button${uid}">
       <span id="span${uid}">${label}</span>
     </button>
+    
+  </div>
+  <div id="div3${uid}">
+    
   </div>
   `;
 }
@@ -61,6 +90,3 @@ function e(id) {
 playerData.subscribe(d => {
   console.log(d);
 })
-playerList.subscribe(l => {
-  console.log(l);
-});

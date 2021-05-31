@@ -72,11 +72,11 @@ export const streamable = (name, defaultValue, options = {}) => {
         // console.log(`connect streamable: ${name}`, socket.id);
         callback(socket, stream);
       })
-      socket.on(name, msg => {
-        const val = stream.decompress(msg, socket);
-        listeners.forEach(l => l(msg));
-        // console.log(`streamable: ${name}`, msg);
-      });
+      // socket.on(name, msg => {
+      //   const val = stream.decompress(msg, socket);
+      //   listeners.forEach(l => l(msg));
+      //   // console.log(`streamable: ${name}`, msg);
+      // });
     }
   });
   

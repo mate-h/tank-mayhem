@@ -25,7 +25,7 @@ const extend = require("extend");
 function serializePlayer(player: Player) {
   return {
     id: player.id,
-    socket_id: player.socket.id,
+    socket_id: player.socket_id,
     body_id: player.body.id,
     color: player.color,
     name: player.name,
@@ -34,7 +34,7 @@ function serializePlayer(player: Player) {
       y: player.body.position.y
     },
     angle: player.body.angle,
-    score: 0
+    score: player.score
   }
 }
 const handleConnect = function(socket: Socket) {
@@ -50,11 +50,15 @@ const handleConnect = function(socket: Socket) {
   });
   log("user connected with ID " + player.id);
 
+  socket.broadcast.emit("join", Object.values(game.players).map(p => serializePlayer(p)));
+
   socket.on("disconnect", function() {
     log("user disconnected with ID " + game.players[socket.id].id);
     const alive = game.players[socket.id].alive;
     game.players[socket.id].remove();
     delete game.players[socket.id];
+
+    socket.broadcast.emit("leave", Object.values(game.players).map(p => serializePlayer(p)));
 
     game.playersCount--;
     if (alive) game.playersAlive--;
@@ -76,7 +80,7 @@ const handleConnect = function(socket: Socket) {
     game.players[socket.id].shoot();
   });
   socket.on("player-data", function(msg) {
-    io.emit("player-data", msg);
+    socket.broadcast.emit("player-data", msg);
   });
   socket.on("controller-input", function(msg) {
     game.players[socket.id].handleController(msg);
@@ -254,19 +258,8 @@ class Game {
       player.alive = false;
       player.spawn();
       player.socket.emit("new session", {
-        player: {
-          id: player.id,
-          socket_id: player.socket_id,
-          body_id: player.body.id,
-          color: player.color,
-          name: player.name,
-          position: {
-            x: player.body.position.x,
-            y: player.body.position.y
-          },
-          angle: player.body.angle,
-          score: player.score
-        },
+        player: serializePlayer(player),
+        players: Object.values(game.players).map(p => serializePlayer(p)),
         level: this.getBodies()
       });
     }

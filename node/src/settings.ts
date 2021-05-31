@@ -43,7 +43,7 @@ export default {
       density: 0.000001,
       collisionFilter: {
         category: packageCategory,
-        mask: defaultCategory | playerCategory | playerPartCategory
+        mask: defaultCategory | playerCategory
       }
     },
     powers: {
@@ -144,8 +144,7 @@ export default {
       frictionStatic: 0,
       restitution: 0.3,
       collisionFilter: {
-        category: playerCategory,
-        mask: defaultCategory | shieldCategory | playerCategory | edgeCategory
+        category: playerCategory
       },
       shards: {
         density: 0.001,
@@ -171,7 +170,7 @@ export default {
       restitution: 1,
       collisionFilter: {
         category: bulletCategory,
-        mask: defaultCategory | shieldCategory | playerCategory | edgeCategory | playerPartCategory
+        mask: defaultCategory | shieldCategory | playerCategory | edgeCategory
       }
     }
   },
@@ -192,7 +191,7 @@ export default {
       isStatic: true,
       collisionFilter: {
         category: wallCategory,
-        mask: defaultCategory | playerCategory | bulletCategory | playerPartCategory
+        mask: defaultCategory | playerCategory | bulletCategory
       }
     }
   },
@@ -205,7 +204,7 @@ export default {
     gravity: { x: 0, y: 0 },
     collisionFilter: {
       category: edgeCategory,
-      mask: defaultCategory | playerCategory | bulletCategory | playerPartCategory
+      mask: defaultCategory | playerCategory | bulletCategory
     }
   }
 };

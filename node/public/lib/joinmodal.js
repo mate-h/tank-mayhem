@@ -68,28 +68,19 @@ export function render() {
     open.subscribe(o => {
       e('div1').style.visibility = o ? 'visible' : 'hidden';
     });
-    name.subscribe(n => {
-      console.log(n);
-      
-      // if (n === "") return;
-      // playerData.update(p => ({...p, name: n}))
-    })
-    color.subscribe(c => {
-      console.log(c);
-      // if (c === "") return;
-      // playerData.update(p => ({...p, color: c}))
-    })
     e('button-play').onclick = () => {
       open.set(false);
     }
     e('name').oninput = (e) => {
-      const i = e.target.value;
-      if (i.trim() === "") name.set(placeholder);
-      else name.set(i);
+      let i = e.target.value;
+      if (i.trim() === "") i = placeholder;
+      playerData.update(p => ({...p, name: i}))
+      name.set(i);
     }
     e('colors').onchange = (e) => {
       const val = e.target.value;
       color.set(val);
+      playerData.update(p => ({...p, color: val}))
       // console.log(e.target.value)
     }
   })
