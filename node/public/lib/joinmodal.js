@@ -57,12 +57,19 @@ export function render() {
       const dy = p.y - e('div2').clientHeight/2 - 55;
       e('div1').style['transform'] = `translate(${dx}px, ${dy}px)`;
     });
+    let once = false;
+    let onceC = false;
     playerData.subscribe(p => {
-      if (p.name) {
+      if (p.name && !once) {
         placeholder = p.name;
-        e('name').placeholder = p.name;
-        name.set(p.name);
+        e('playerId').placeholder = p.name;
+        once = true;
       }
+      if (p.color && !onceC) {
+        e('colors').value = p.color.name;
+        onceC = true;
+      }
+      if (p.name) name.set(p.name);
       if (p.color) color.set(p.color);
     })
     open.subscribe(o => {
@@ -71,7 +78,7 @@ export function render() {
     e('button-play').onclick = () => {
       open.set(false);
     }
-    e('name').oninput = (e) => {
+    e('playerId').oninput = (e) => {
       let i = e.target.value;
       if (i.trim() === "") i = placeholder;
       playerData.update(p => ({...p, name: i}))
@@ -80,7 +87,7 @@ export function render() {
     e('colors').onchange = (e) => {
       const val = e.target.value;
       color.set(val);
-      playerData.update(p => ({...p, color: val}))
+      playerData.update(p => ({...p, color: colors[val]}))
       // console.log(e.target.value)
     }
   })
@@ -103,6 +110,8 @@ export function render() {
         pointer-events: none;
       }
       #div2 {
+        position: relative;
+        z-index: 10;
         display: inline-block;
         background-color: rgba(224, 224, 224, 0.76);
         box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
@@ -162,8 +171,8 @@ export function render() {
     </style>
     <div id="div1">
       <div id="div2">
-        <label for="name">Choose a name</label>
-        <input style="margin-bottom: 1rem" id="name" placeholder="${placeholder}" type="text" name="name" autocomplete="off"/>
+        <label for="playerId">Choose an alias</label>
+        <input maxlength="12" style="margin-bottom: 1rem" id="playerId" placeholder="${placeholder}" type="text" autocorrect="off" autocapitalize="none"/>
         <br/>
         <label for="colors">Pick a color</label>
         <select style="margin-bottom: 1rem" name="color" id="colors">

@@ -1,3 +1,6 @@
+import Color from "./color";
+import colors from "./lib/colors";
+
 const extend = require("extend");
 const Util = {
   extractBodyProperties: function(body: any) {
@@ -82,27 +85,11 @@ const Util = {
     return Math.random() * (max - min) + min;
   },
   getRandomColor: function() {
-    const colors = [
-      "#F44336",
-      "#E91E63",
-      "#9C27B0",
-      "#673AB7",
-      "#3F51B5",
-      "#2196F3",
-      "#03A9F4",
-      "#00BCD4",
-      "#009688",
-      "#4CAF50",
-      "#8BC34A",
-      "#CDDC39",
-      "#FFC107",
-      "#FF9800",
-      "#FF5722",
-      "#795548",
-      "#9E9E9E",
-      "#607D8B"
-    ];
-    const c = colors[Util.getRandomInt(0, colors.length)];
+    const colorsNames = Object.keys(colors);
+    const colorsVals = Object.values(colors);
+    const idx = Util.getRandomInt(0, colorsVals.length);
+    const c = new Color(colorsVals[idx]);
+    c.name = colorsNames[idx];
     return c;
   }
 };

@@ -21,7 +21,7 @@ function r(c: number) {
 type Power = any;
 class Player {
   id = -1;
-  color = new Color(Util.getRandomColor());
+  color = Util.getRandomColor();
   settings = game.settings.player;
   bullet_count = 0;
   bullets: Bullet[] = [];
@@ -40,6 +40,7 @@ class Player {
   body = Body.create({});
   socket: Socket;
   bodyOptions: any;
+  mainBody?: Body;
   constructor(socket: Socket) {
     Events.on(
       game.engine,
@@ -75,13 +76,14 @@ class Player {
     const phy = this.settings.physics;
     app.render = {};
     app.render.fillStyle = this.color.toString();
+    this.mainBody = Bodies.rectangle(x, y, app.baseWidth, app.baseHeight, {
+      render: { fillStyle: this.color.toString() },
+      label: "Player " + this.socket_id
+    });
     const extra = {
       parts: [
         //main body
-        Bodies.rectangle(x, y, app.baseWidth, app.baseHeight, {
-          render: { fillStyle: this.color.toString() },
-          label: "Player " + this.socket_id
-        }),
+        this.mainBody,
         //center circle
         Bodies.circle(x, y, app.baseRadius, {
           render: { fillStyle: this.color.darker(app.darkenColor).toString() }
@@ -111,7 +113,19 @@ class Player {
     // setTimeout(() => this.power(game.settings.package.powers.laser), 100);
   };
 
-  
+  setColor(color: Color) {
+    this.color = color;
+    if (this.body) {
+      this.body.parts.map((p,i) => {
+        if (p.id === this.mainBody?.id) {
+          Body.set(p, { render: { ...p.render, fillStyle: this.color.toString() }})
+        } else {
+          const d = this.settings.appearance.darkenColor;
+          Body.set(p, { render: { ...p.render, fillStyle: this.color.darker(d).toString() }})
+        }
+      })
+    }
+  }
 
   handleInput(down: boolean, command: number) {
     switch (command) {

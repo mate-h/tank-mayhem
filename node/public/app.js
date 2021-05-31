@@ -338,9 +338,10 @@ export class Game {
 
         // translate the view if player has moved over 50px from the center of viewport
         if (centerDist > scrollThreshold) {
+          // console.log(centerDist, scrollThreshold);
           // create a vector to translate the view, allowing the user to control view speed
           var direction = Vector.normalise(deltaCenter),
-            speed = Math.min(10, Math.pow(centerDist - 50, 2) * 0.0002);
+            speed = Math.min(10, Math.pow(centerDist, 2) * 0.0002);
 
           translate = Vector.mult(direction, speed);
 
@@ -382,7 +383,12 @@ export class Game {
     playerList.update(list => {
       return list.map(p => {
         const body = this.getBody(p.body_id);
-        if (body) return {...p, position: calcPos(body.position) };
+        if (body) {
+          return {...p, position: calcPos(body.position), lastPos: body.position };
+        }
+        if (p.lastPos) {
+          return {...p, position: calcPos(p.lastPos) };
+        }
         return p;
       })
     });
@@ -733,11 +739,29 @@ export class Game {
   socket.on("join", obj => {
     playerList.set(obj.filter(p => p.id !== player.id))
   });
-  socket.on("player-data", obj => {
+  socket.on("player-data", msg => {
+    const { player: obj, body } = msg;
+    if (obj.id === player.id) {
+      const sparseKeys = Object.keys(this.dynamicBodies);
+      const bodies = Object.values(this.dynamicBodies);
+      const idx = bodies.findIndex(b => b.id === player.body_id);
+      if (idx !== -1) {
+        const key = sparseKeys[idx];
+        this.dynamicBodies[key] = body;
+      }
+      return;
+    }
     playerList.update(l => {
       const rest = l.filter(i => i.id !== obj.id);
       const found = l.find(i => i.id === obj.id);
       if (found) {
+        const sparseKeys = Object.keys(this.dynamicBodies);
+        const bodies = Object.values(this.dynamicBodies);
+        const idx = bodies.findIndex(b => b.id === found.body_id);
+        if (idx !== -1) {
+          const key = sparseKeys[idx];
+          this.dynamicBodies[key] = body;
+        }
         return [...rest, obj];
       }
       return l;

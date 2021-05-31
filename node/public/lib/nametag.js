@@ -18,16 +18,17 @@ function e(id) {
     });
     let prevList = [];
     playerList.subscribe(l => {
-      // if(prevList.sort().join(',') !== l.map(l => l.id).sort().join(',')) {
+      if(prevList.sort().join(',') !== l.map(l => l.id).sort().join(',')) {
         e(`div3${uid}`).innerHTML = l.map(p => /*html*/`
         <div id="div2${uid}">
           <span class="player${uid}" id="span2${uid}${p.id}">${p.name}</span>
         </div>
         `).join('');
-      // }
+      }
       l.forEach(p => {
         const dx = p.position.x;
         const dy = p.position.y - 35;
+        e(`span2${uid}${p.id}`).innerText = p.name;
         e(`span2${uid}${p.id}`).style['transform'] = `translate(${dx}px, ${dy}px)`;
       })
       // update transform
@@ -64,8 +65,11 @@ function e(id) {
       border-radius: 3px;
       box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
       padding: 0 0.5rem;
+      background-color: rgba(224, 224, 224, 0.76);
+      font-weight: 400;
+      font-size: 0.75rem;
     }
-    .player${uid}, #button${uid} {
+    #button${uid} {
       pointer-events: all;
       background-color: rgba(224, 224, 224, 0.76);
       font-weight: 400;
@@ -86,7 +90,3 @@ function e(id) {
   </div>
   `;
 }
-
-playerData.subscribe(d => {
-  console.log(d);
-})

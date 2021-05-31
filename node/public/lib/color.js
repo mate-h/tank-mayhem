@@ -1,20 +1,27 @@
-import Util from "./util";
+function clip(val, min, max) {
+  val = Math.max(min, val);
+  val = Math.min(max, val);
+  return val;
+}
+function interpolate(start, end, fact) {
+  fact = clip(fact, 0, 1);
+  return start + (end - start) * fact;
+}
 
 class Color {
   r = 0;
   g = 0;
   b = 0;
   a = 1;
-  name = "color";
-  constructor(string?: string) {
+  constructor(string) {
     if (string) this.parse(string);
   }
   
 
-  parse(str: string) {
+  parse(str) {
     if (str.indexOf("#") > -1) {
       str = str.split("#")[1].toLowerCase();
-      function getHex(c: any) {
+      function getHex(c) {
         switch (c) {
           case "0":
             return 0;
@@ -91,8 +98,8 @@ class Color {
     );
   };
 
-  darker(scalar: number) {
-    scalar = Util.clip(scalar, 0, 1);
+  darker(scalar) {
+    scalar = clip(scalar, 0, 1);
 
     const c = new Color();
     c.r = this.r * scalar;
@@ -101,13 +108,13 @@ class Color {
     c.a = this.a;
     return c;
   };
-  interpolate(color: Color, fact: number) {
-    fact = Util.clip(fact, 0, 1);
+  interpolate(color, fact) {
+    fact = clip(fact, 0, 1);
     const c = new Color();
-    c.r = Util.interpolate(this.r, color.r, fact);
-    c.g = Util.interpolate(this.g, color.g, fact);
-    c.b = Util.interpolate(this.b, color.b, fact);
-    c.a = Util.interpolate(this.a, color.a, fact);
+    c.r = interpolate(this.r, color.r, fact);
+    c.g = interpolate(this.g, color.g, fact);
+    c.b = interpolate(this.b, color.b, fact);
+    c.a = interpolate(this.a, color.a, fact);
     return c;
   };
 }

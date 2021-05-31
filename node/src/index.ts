@@ -14,6 +14,7 @@ import Util from "./util";
 import Level from "./level";
 import Package from "./package";
 import Player from "./player";
+import Color from "./color";
 
 // TODO: remove this global variable and use ES6 imports instead
 (global.window as any) = {
@@ -80,7 +81,14 @@ const handleConnect = function(socket: Socket) {
     game.players[socket.id].shoot();
   });
   socket.on("player-data", function(msg) {
-    socket.broadcast.emit("player-data", msg);
+    if (msg.name) game.players[socket.id].name = msg.name;
+    if (typeof msg.color === "string") {
+      game.players[socket.id].setColor(new Color(msg.color));
+    }
+    io.emit("player-data", {
+      player: serializePlayer(game.players[socket.id]),
+      body: Util.extractBodyProperties(game.players[socket.id].body)
+    });
   });
   socket.on("controller-input", function(msg) {
     game.players[socket.id].handleController(msg);
