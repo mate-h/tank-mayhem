@@ -54,7 +54,7 @@ export function render() {
   requestAnimationFrame(() => {
     playerPosition.subscribe(p => {
       const dx = p.x;
-      const dy = p.y - e('div2').clientHeight/2 - 55;
+      const dy = p.y - e('div2').clientHeight/2 - 62;
       e('div1').style['transform'] = `translate(${dx}px, ${dy}px)`;
     });
     let once = false;
@@ -99,6 +99,7 @@ export function render() {
       }
       #div1 {
         position: fixed;
+        z-index: 10;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -110,8 +111,6 @@ export function render() {
         pointer-events: none;
       }
       #div2 {
-        position: relative;
-        z-index: 10;
         display: inline-block;
         background-color: rgba(224, 224, 224, 0.76);
         box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
@@ -126,8 +125,14 @@ export function render() {
       p {
         margin: 0;
       }
-      button {
+      #button-play {
         height: 1.5rem;
+        padding: 0 0.5rem;
+      }
+      button {
+        position: relative;
+        z-index: 10;
+        height: 1rem;
         cursor: pointer;
         appearance: none;
         border: none;
@@ -135,7 +140,7 @@ export function render() {
         border-radius: 3px;
         box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
         font-weight: 500;
-        padding: 0 0.5rem;
+        padding: 0 0.25rem;
         background: none;
         transition: background-color 75ms linear;
       }

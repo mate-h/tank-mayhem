@@ -1,5 +1,5 @@
 const dark = false;
-import { writable, socketClient, playerData } from './lib/store.js';
+import { writable, socketClient, playerData, alive } from './lib/store.js';
 export const playerPosition = writable({ x: 0, y: 0});
 export let player = null;
 import C2S from './lib/canvas2svg.js';
@@ -721,7 +721,9 @@ export class Game {
     console.log(obj);
     player = obj.player;
     playerList.set(obj.players.filter(p => p.id !== player.id));
+    playerData.broadcast = false;
     playerData.set(player);
+    playerData.broadcast = true;
     for (var i = 0; i < obj.level.length; i++) {
       var body = obj.level[i];
       if (body.isStatic) game.staticBodies.push(body);
@@ -769,6 +771,17 @@ export class Game {
   });
   socket.on("leave", obj => {
     playerList.set(obj.filter(p => p.id !== player.id))
+  });
+  socket.on("player-death", obj => {
+    if (obj.id === player.id) alive.set(obj.alive);
+    else {
+      playerList.update(l => l.map(i => {
+        if (i.id === obj.id) {
+          return {...i, alive: obj.alive};
+        }
+        return i;
+      }))
+    }
   });
   socket.on(
     "spawn",

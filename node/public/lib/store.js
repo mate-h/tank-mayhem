@@ -21,6 +21,7 @@ export const writable = (defaultValue) => {
 }
 
 export let socketClient = writable(null);
+export const alive = writable(true);
 
 export const streamable = (name, defaultValue, options = {}) => {
   const {

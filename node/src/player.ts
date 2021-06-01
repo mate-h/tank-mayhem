@@ -461,7 +461,7 @@ class Player {
     this.color.a = 1;
 
     //TODO: score counter
-
+    game.playerDeath(this);
     if (Object.values(game.players).filter(p => p.alive).length <= 1) {
       game.requestNewSession();
     }

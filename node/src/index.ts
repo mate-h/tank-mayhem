@@ -35,7 +35,8 @@ function serializePlayer(player: Player) {
       y: player.body.position.y
     },
     angle: player.body.angle,
-    score: player.score
+    score: player.score,
+    alive: player.alive,
   }
 }
 const handleConnect = function(socket: Socket) {
@@ -187,6 +188,10 @@ class Game {
       pkg.spawn();
     }, this.settings.package.spawnRate);
   };
+
+  playerDeath(player: Player) {
+    io.emit("player-death", serializePlayer(player));
+  }
 
   sessionTimeout = this.settings.sessionTimeout; // ms
   cancelNewSession?: () => void;
