@@ -12,11 +12,16 @@ import Bullet from "./bullet";
 import Util from "./util";
 import { game } from "./index";
 import { Socket } from "socket.io";
+import animals from './lib/animals';
+
+function r(c: number) {
+  return Math.floor(Math.random() * c);
+}
 
 type Power = any;
 class Player {
   id = -1;
-  color = new Color(Util.getRandomColor());
+  color = Util.getRandomColor();
   settings = game.settings.player;
   bullet_count = 0;
   bullets: Bullet[] = [];
@@ -25,7 +30,7 @@ class Player {
   alive = false;
   deaths = 0;
   kills = 0;
-  name ="Player";
+  name = animals[r(animals.length)];
   activePowers: Record<string,any> = {};
   socket_id: string;
 
@@ -34,6 +39,8 @@ class Player {
   shoot_released = true;
   body = Body.create({});
   socket: Socket;
+  bodyOptions: any;
+  mainBody?: Body;
   constructor(socket: Socket) {
     Events.on(
       game.engine,
@@ -69,13 +76,14 @@ class Player {
     const phy = this.settings.physics;
     app.render = {};
     app.render.fillStyle = this.color.toString();
+    this.mainBody = Bodies.rectangle(x, y, app.baseWidth, app.baseHeight, {
+      render: { fillStyle: this.color.toString() },
+      label: "Player " + this.socket_id
+    });
     const extra = {
       parts: [
         //main body
-        Bodies.rectangle(x, y, app.baseWidth, app.baseHeight, {
-          render: { fillStyle: this.color.toString() },
-          label: "Player " + this.socket_id
-        }),
+        this.mainBody,
         //center circle
         Bodies.circle(x, y, app.baseRadius, {
           render: { fillStyle: this.color.darker(app.darkenColor).toString() }
@@ -105,7 +113,19 @@ class Player {
     // setTimeout(() => this.power(game.settings.package.powers.laser), 100);
   };
 
-  
+  setColor(color: Color) {
+    this.color = color;
+    if (this.body) {
+      this.body.parts.map((p,i) => {
+        if (p.id === this.mainBody?.id) {
+          Body.set(p, { render: { ...p.render, fillStyle: this.color.toString() }})
+        } else {
+          const d = this.settings.appearance.darkenColor;
+          Body.set(p, { render: { ...p.render, fillStyle: this.color.darker(d).toString() }})
+        }
+      })
+    }
+  }
 
   handleInput(down: boolean, command: number) {
     switch (command) {
@@ -137,6 +157,43 @@ class Player {
 
     Body.setAngle(this.body, angle);
   };
+  prevShootControl = false;
+  handleController(input: number[]) {
+    const left = {
+      x: input[0],
+      y: input[1],
+    }
+    const right = {
+      x: input[2],
+      y: input[3],
+    }
+    const angle = Math.atan2(right.y, right.x) + Math.PI/2;
+    const angleT = Math.atan2(left.y, left.x) + Math.PI/2;
+    const deg = (angle / Math.PI) * 180;
+    const len = Math.sqrt(right.x*right.x + right.y*right.y)
+    const len2 = Math.sqrt(left.x*left.x + left.y*left.y)
+    if (len2>0) {
+      // console.log(angleT);
+      // Body.setAngle(this.body.parts[1], angleT);
+      // Body.setAngle(this.body.parts[2], angleT);
+    }
+    console.log(input[4]);
+    const currentShootControl = input[4] === 1;
+    if (currentShootControl !== this.prevShootControl && currentShootControl === true) {
+      this.shoot();
+    }
+    this.prevShootControl = currentShootControl;
+    
+    if (len>0) {
+      Body.setAngle(this.body, angle);
+      this.forwardControl = true;
+      this.forwardVec = len;
+    } else {
+      this.forwardControl = false;
+      this.forwardVec = 1;
+    }
+  }
+  forwardVec = 1;
   forwardControl = false;
   backwardControl = false;
   leftTurnControl = false;
@@ -255,7 +312,7 @@ class Player {
 
     //check to update velocities
     let turn = this.settings.speed.turn;
-    let fw = this.settings.speed.forward;
+    let fw = this.settings.speed.forward * this.forwardVec;
     const ap = this.activePowers;
     // speed or slow based on which one was activated last
     let attr;
@@ -404,7 +461,7 @@ class Player {
     this.color.a = 1;
 
     //TODO: score counter
-
+    game.playerDeath(this);
     if (Object.values(game.players).filter(p => p.alive).length <= 1) {
       game.requestNewSession();
     }

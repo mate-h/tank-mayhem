@@ -14,6 +14,7 @@ import Util from "./util";
 import Level from "./level";
 import Package from "./package";
 import Player from "./player";
+import Color from "./color";
 
 // TODO: remove this global variable and use ES6 imports instead
 (global.window as any) = {
@@ -21,6 +22,23 @@ import Player from "./player";
 }
 const extend = require("extend");
 
+
+function serializePlayer(player: Player) {
+  return {
+    id: player.id,
+    socket_id: player.socket_id,
+    body_id: player.body.id,
+    color: player.color,
+    name: player.name,
+    position: {
+      x: player.body.position.x,
+      y: player.body.position.y
+    },
+    angle: player.body.angle,
+    score: player.score,
+    alive: player.alive,
+  }
+}
 const handleConnect = function(socket: Socket) {
   const player = new Player(socket);
   player.id = game.id_cnt++;
@@ -28,28 +46,21 @@ const handleConnect = function(socket: Socket) {
   game.players[socket.id] = player;
   player.spawn();
   socket.emit("init", {
-    player: {
-      id: player.id,
-      socket_id: socket.id,
-      body_id: player.body.id,
-      color: player.color,
-      name: player.name,
-      position: {
-        x: player.body.position.x,
-        y: player.body.position.y
-      },
-      angle: player.body.angle,
-      score: 0
-    },
+    player: serializePlayer(player),
+    players: Object.values(game.players).map(p => serializePlayer(p)),
     level: game.getBodies()
   });
   log("user connected with ID " + player.id);
+
+  socket.broadcast.emit("join", Object.values(game.players).map(p => serializePlayer(p)));
 
   socket.on("disconnect", function() {
     log("user disconnected with ID " + game.players[socket.id].id);
     const alive = game.players[socket.id].alive;
     game.players[socket.id].remove();
     delete game.players[socket.id];
+
+    socket.broadcast.emit("leave", Object.values(game.players).map(p => serializePlayer(p)));
 
     game.playersCount--;
     if (alive) game.playersAlive--;
@@ -69,6 +80,19 @@ const handleConnect = function(socket: Socket) {
   socket.on("touch shoot", function(msg) {
     game.players[socket.id].handleTouch(parseFloat(msg), false);
     game.players[socket.id].shoot();
+  });
+  socket.on("player-data", function(msg) {
+    if (msg.name) game.players[socket.id].name = msg.name;
+    if (typeof msg.color === "string") {
+      game.players[socket.id].setColor(new Color(msg.color));
+    }
+    io.emit("player-data", {
+      player: serializePlayer(game.players[socket.id]),
+      body: Util.extractBodyProperties(game.players[socket.id].body)
+    });
+  });
+  socket.on("controller-input", function(msg) {
+    game.players[socket.id].handleController(msg);
   });
 
   socket.on("laserpath", function(msg) {
@@ -165,6 +189,10 @@ class Game {
     }, this.settings.package.spawnRate);
   };
 
+  playerDeath(player: Player) {
+    io.emit("player-death", serializePlayer(player));
+  }
+
   sessionTimeout = this.settings.sessionTimeout; // ms
   cancelNewSession?: () => void;
   requestNewSession() {
@@ -243,19 +271,8 @@ class Game {
       player.alive = false;
       player.spawn();
       player.socket.emit("new session", {
-        player: {
-          id: player.id,
-          socket_id: player.socket_id,
-          body_id: player.body.id,
-          color: player.color,
-          name: player.name,
-          position: {
-            x: player.body.position.x,
-            y: player.body.position.y
-          },
-          angle: player.body.angle,
-          score: player.score
-        },
+        player: serializePlayer(player),
+        players: Object.values(game.players).map(p => serializePlayer(p)),
         level: this.getBodies()
       });
     }

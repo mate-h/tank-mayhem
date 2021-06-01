@@ -1,6 +1,12 @@
 const dark = false;
+import { writable, socketClient, playerData, alive } from './lib/store.js';
+export const playerPosition = writable({ x: 0, y: 0});
+export let player = null;
+import C2S from './lib/canvas2svg.js';
+import { playerList } from './lib/nametag.js';
 
-(function Game() {
+export class Game {
+  constructor() {
   var isMobile = (function() {
     var check = false;
     (function(a) {
@@ -33,7 +39,6 @@ const dark = false;
     Bodies = Matter.Bodies,
     Query = Matter.Query;
 
-  var PLAYER_ME = null;
   var otherPowers = {};
   var player_abs = {};
 
@@ -86,6 +91,9 @@ const dark = false;
     element: document.body,
     options: this.settings.render
   });
+  window.c2s = new C2S(1240, 1240);
+  window.context = this.render.context;
+  window.render = this.render;
   this.dynamicBodies = {};
   this.staticBodies = [];
   this.width = document.body.clientWidth;
@@ -147,7 +155,7 @@ const dark = false;
       name = "end";
     }
 
-    if (deltaTouch <= deltaThreshold) name = "shoot";
+    // if (deltaTouch >= deltaThreshold) name = "shoot";
 
     if (touch !== null) touchPrev = touch;
 
@@ -221,7 +229,7 @@ const dark = false;
     var dynamic_prev = [];
     socket.on(
       "frame",
-      function(obj) {
+      (obj) => {
         var sparseKeys = Object.keys(obj);
         for (var i = 0; i < sparseKeys.length; i++) {
           var index = sparseKeys[i];
@@ -249,20 +257,21 @@ const dark = false;
           }
 
           //update camera
-          if (this.dynamicBodies[index].id == PLAYER_ME.body_id) {
-            PLAYER_ME.position = {
+          if (this.dynamicBodies[index].id == player.body_id) {
+            player.position = {
               x: obj[index][0],
               y: obj[index][1]
             };
           }
         }
-      }.bind(this)
+      }
     );
 
+    // main render loop
     setInterval(
-      function() {
+      () => {
         this.renderGame();
-      }.bind(this),
+      },
       1000 / this.settings.FPS
     );
 
@@ -320,23 +329,25 @@ const dark = false;
 
         // get vector from player relative to center of viewport
         player_abs.x =
-          (PLAYER_ME.position.x - game.render.bounds.min.x) / boundsScale.x;
+          (player.position.x - game.render.bounds.min.x) / boundsScale.x;
         player_abs.y =
-          (PLAYER_ME.position.y - game.render.bounds.min.y) / boundsScale.y;
+          (player.position.y - game.render.bounds.min.y) / boundsScale.y;
 
         var deltaCenter = Vector.sub(player_abs, viewportCenter),
           centerDist = Vector.magnitude(deltaCenter);
 
         // translate the view if player has moved over 50px from the center of viewport
         if (centerDist > scrollThreshold) {
+          // console.log(centerDist, scrollThreshold);
           // create a vector to translate the view, allowing the user to control view speed
           var direction = Vector.normalise(deltaCenter),
-            speed = Math.min(10, Math.pow(centerDist - 50, 2) * 0.0002);
+            speed = Math.min(10, Math.pow(centerDist, 2) * 0.0002);
 
           translate = Vector.mult(direction, speed);
 
           // move the view
           Bounds.translate(game.render.bounds, translate);
+
 
           // we must update the mouse too
           Mouse.setOffset(mouse, game.render.bounds.min);
@@ -354,52 +365,77 @@ const dark = false;
   };
 
   this.getBody = id => Object.values(this.dynamicBodies).find(b => b.id === id);
-  this.getAllBodies = function() {
+  this.getAllBodies = () => {
     return this.staticBodies.concat(Object.values(this.dynamicBodies));
   };
-  this.renderGame = function() {
+  this.renderGame = () => {
+    const cx = (game.render.bounds.max.x + game.render.bounds.min.x) / 2;
+    const cy = (game.render.bounds.max.y + game.render.bounds.min.y) / 2;
+    const w2 = window.innerWidth / 2;
+    const h2 = window.innerHeight / 2;
+    function calcPos({x, y}) {
+      return {
+        x: x - game.render.bounds.min.x - w2,
+        y: y - game.render.bounds.min.y - h2,
+      }
+    }
+    playerPosition.set(calcPos(player.position));
+    playerList.update(list => {
+      return list.map(p => {
+        const body = this.getBody(p.body_id);
+        if (body) {
+          return {...p, position: calcPos(body.position), lastPos: body.position };
+        }
+        if (p.lastPos) {
+          return {...p, position: calcPos(p.lastPos) };
+        }
+        return p;
+      })
+    });
+    
     var bodies = this.getAllBodies(),
-      context = render.context,
-      options = render.options;
+      context = this.render.context,
+      options = this.render.options;
 
     // clear the canvas with a transparent fill, to allow the canvas background to show
     context.fillStyle = game.settings.render.background;
-    context.fillRect(0, 0, render.canvas.width, render.canvas.height);
+    context.fillRect(0, 0, this.render.canvas.width, this.render.canvas.height);
 
     // handle bounds
     if (options.hasBounds) {
       // transform the view
-      Render.startViewTransform(render);
+      Render.startViewTransform(this.render);
 
       // update mouse
-      if (render.mouse) {
-        Mouse.setScale(render.mouse, {
-          x: (render.bounds.max.x - render.bounds.min.x) / render.canvas.width,
-          y: (render.bounds.max.y - render.bounds.min.y) / render.canvas.height
+      if (this.render.mouse) {
+        Mouse.setScale(this.render.mouse, {
+          x: (this.render.bounds.max.x - this.render.bounds.min.x) / this.render.canvas.width,
+          y: (this.render.bounds.max.y - this.render.bounds.min.y) / this.render.canvas.height
         });
 
-        Mouse.setOffset(render.mouse, render.bounds.min);
+        Mouse.setOffset(this.render.mouse, this.render.bounds.min);
       }
     }
 
-    if (PLAYER_ME.activePowers && PLAYER_ME.activePowers.laser) {
+    if (player.activePowers && player.activePowers.laser) {
       this.renderLaser(
         bodies,
-        bodies.find(b => b.id === PLAYER_ME.body_id)
+        bodies.find(b => b.id === player.body_id)
       );
     }
 
-    Render.bodies(render, bodies, context);
+    Render.bodies(this.render, bodies, context);
     this.renderLabels();
     if (options.hasBounds) {
       // revert view transforms
-      Render.endViewTransform(render);
+      Render.endViewTransform(this.render);
     }
 
     this.renderScore();
   };
+  window.renderGame = this.renderGame;
 
-  this.renderLabels = function() {
+  this.renderLabels = () => {
     const context = this.render.context;
     var dppx = window.devicePixelRatio;
     this.getAllBodies().forEach(body => {
@@ -430,8 +466,8 @@ const dark = false;
         context.fillStyle = "#000";
         const padding = 40;
         const lineHeight = 12;
-        if (body.id === PLAYER_ME.body_id) {
-          Object.entries(PLAYER_ME.activePowers || {}).forEach(
+        if (body.id === player.body_id) {
+          Object.entries(player.activePowers || {}).forEach(
             ([name, power], i) => {
               const t =
                 (new Date().getTime() - power.activatedAt) / power.timeout;
@@ -464,9 +500,9 @@ const dark = false;
     });
   };
 
-  this.renderLaser = function() {
+  this.renderLaser = () => {
     const context = this.render.context;
-    const playerBody = this.getBody(PLAYER_ME.body_id);
+    const playerBody = this.getBody(player.body_id);
     if (!playerBody) return;
 
     const pathPoints = this.runLaser(playerBody);
@@ -489,7 +525,7 @@ const dark = false;
       }
     });
   };
-  this.runLaser = function(body) {
+  this.runLaser = (body) => {
     const bodies = this.getAllBodies();
     const rayLength = Math.max(this.width, this.height);
 
@@ -552,7 +588,7 @@ const dark = false;
     return pathPoints;
   };
 
-  this.renderStreak = function(pathPoints, currentDistance) {
+  this.renderStreak = (pathPoints, currentDistance) => {
     const context = this.render.context;
     const streakLen = 200;
     let accDistance = 0;
@@ -589,7 +625,7 @@ const dark = false;
   };
 
   var animationFrame = null;
-  this.animate = function(cb, { duration = 250, end = () => {} }) {
+  this.animate = (cb, { duration = 250, end = () => {} }) => {
     const start = new Date().getTime();
     const step = () => {
       const curr = new Date().getTime();
@@ -615,11 +651,11 @@ const dark = false;
   var prevScore = null;
   var scoreOffset = 0;
   var animating = false;
-  this.renderScore = function() {
+  this.renderScore = () => {
     var dppx = window.devicePixelRatio;
     var context = this.render.context;
     context.scale(dppx, dppx);
-    if (prevScore !== PLAYER_ME.score && !animating && prevScore !== null) {
+    if (prevScore !== player.score && !animating && prevScore !== null) {
       animating = true;
       this.animate(
         t => {
@@ -627,7 +663,7 @@ const dark = false;
         },
         {
           end: () => {
-            prevScore = PLAYER_ME.score;
+            prevScore = player.score;
             scoreOffset = 0;
             animating = false;
           }
@@ -649,7 +685,7 @@ const dark = false;
       context.globalAlpha = alpha;
       context.fillText(
         text,
-        game.width / 2 - context.measureText(PLAYER_ME.score + "").width / 2,
+        game.width / 2 - context.measureText(player.score + "").width / 2,
         game.height - padding + offset
       );
     };
@@ -657,12 +693,12 @@ const dark = false;
       const quadOut = t => -t * (t - 2.0);
       fillText(prevScore, -fontSize * quadOut(scoreOffset), 1 - scoreOffset);
       fillText(
-        PLAYER_ME.score,
+        player.score,
         -fontSize * (quadOut(scoreOffset) - 1),
         scoreOffset
       );
     } else {
-      fillText(PLAYER_ME.score, 0);
+      fillText(player.score, 0);
     }
     context.restore();
 
@@ -674,14 +710,20 @@ const dark = false;
     );
 
     if (!animating) {
-      prevScore = PLAYER_ME.score;
+      prevScore = player.score;
     }
   };
 
   var socket = io();
-  var init = function(obj, retry) {
+  socketClient.set(socket);
+  var init = (obj, retry) => {
     console.log("init");
-    PLAYER_ME = obj.player;
+    console.log(obj);
+    player = obj.player;
+    playerList.set(obj.players.filter(p => p.id !== player.id));
+    playerData.broadcast = false;
+    playerData.set(player);
+    playerData.broadcast = true;
     for (var i = 0; i < obj.level.length; i++) {
       var body = obj.level[i];
       if (body.isStatic) game.staticBodies.push(body);
@@ -692,46 +734,92 @@ const dark = false;
     game.centerCamera(obj.player);
     if (!retry) game.initialize();
   };
-  socket.once("init", function(msg) {
+  socket.once("init", (msg) => {
     init(msg, false);
+  });
+
+  socket.on("join", obj => {
+    playerList.set(obj.filter(p => p.id !== player.id))
+  });
+  socket.on("player-data", msg => {
+    const { player: obj, body } = msg;
+    if (obj.id === player.id) {
+      const sparseKeys = Object.keys(this.dynamicBodies);
+      const bodies = Object.values(this.dynamicBodies);
+      const idx = bodies.findIndex(b => b.id === player.body_id);
+      if (idx !== -1) {
+        const key = sparseKeys[idx];
+        this.dynamicBodies[key] = body;
+      }
+      return;
+    }
+    playerList.update(l => {
+      const rest = l.filter(i => i.id !== obj.id);
+      const found = l.find(i => i.id === obj.id);
+      if (found) {
+        const sparseKeys = Object.keys(this.dynamicBodies);
+        const bodies = Object.values(this.dynamicBodies);
+        const idx = bodies.findIndex(b => b.id === found.body_id);
+        if (idx !== -1) {
+          const key = sparseKeys[idx];
+          this.dynamicBodies[key] = body;
+        }
+        return [...rest, obj];
+      }
+      return l;
+    })
+  });
+  socket.on("leave", obj => {
+    playerList.set(obj.filter(p => p.id !== player.id))
+  });
+  socket.on("player-death", obj => {
+    if (obj.id === player.id) alive.set(obj.alive);
+    else {
+      playerList.update(l => l.map(i => {
+        if (i.id === obj.id) {
+          return {...i, alive: obj.alive};
+        }
+        return i;
+      }))
+    }
   });
   socket.on(
     "spawn",
-    function(obj) {
+    (obj) => {
       console.log("spawn");
       for (var i = 0; i < obj.length; i++) {
         this.dynamicBodies[obj[i].id] = obj[i];
       }
-    }.bind(this)
+    }
   );
   socket.on(
     "remove",
-    function(obj) {
+    (obj) => {
       console.log("remove", obj.id);
       delete this.dynamicBodies[obj.id];
-    }.bind(this)
+    }
   );
   socket.on(
     "disconnect",
-    function() {
+    () => {
       console.log("disconnect");
       this.dynamicBodies = {};
       this.staticBodies = [];
       socket.once("init", function(msg) {
         init(msg, true);
       });
-    }.bind(this)
+    }
   );
   socket.on(
     "new session",
-    function(msg) {
+    (msg) => {
       console.log("new session");
       this.dynamicBodies = {};
       this.staticBodies = [];
       // clear active powers
-      PLAYER_ME.activePowers = {};
+      player.activePowers = {};
       init(msg, true);
-    }.bind(this)
+    }
   );
   // socket.on(
   //   "score",
@@ -744,8 +832,8 @@ const dark = false;
     // set active powers
     console.log("power", msg);
     const body = this.getBody(msg.body.id);
-    if (PLAYER_ME && PLAYER_ME.body_id === msg.body.id) {
-      PLAYER_ME.activePowers = msg.powers;
+    if (player && player.body_id === msg.body.id) {
+      player.activePowers = msg.powers;
 
       if (msg.powers.invisibility) {
         Body.set(body, { render: { ...body.render, opacity: 0.54 } });
@@ -775,7 +863,7 @@ const dark = false;
       return p;
     }, 200);
 
-    if (msg.body.id === PLAYER_ME.body_id) {
+    if (msg.body.id === player.body_id) {
       socket.emit("laserpath", {
         pathPoints,
         length,
@@ -828,7 +916,8 @@ const dark = false;
     };
   });
   var game = this;
-})();
+}
+}
 
 //
 //				code by Isaiah Smith

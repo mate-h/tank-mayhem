@@ -5,6 +5,6 @@ services:
   docker-gen:
     volumes:
       - certs:/etc/nginx/certs:ro
-  api:
+  node:
     volumes:
       - certs:/etc/nginx/certs:ro

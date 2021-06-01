@@ -7,6 +7,7 @@ const bulletCategory = 8;
 const wallCategory = 16;
 const playerCategory = 32;
 const edgeCategory = 64;
+const playerPartCategory = 128;
 
 export default {
   theme: { dark },
