@@ -14,7 +14,7 @@
   "dependencies": {
     "@socket.io/redis-adapter": "^7.0.0",
     "extend": "^3.0.2",
-    "fastify": "^3.16.2",
+    "fastify": "^3.29.4",
     "fastify-static": "^4.2.2",
     "matter-js": "^0.17.1",
     "poly-decomp": "^0.3.0",
